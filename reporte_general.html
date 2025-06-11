@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIS-FP - Reporte General</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/global.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="text-white min-h-screen">
+    <!-- Capa semitransparente para mejor contraste -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 -z-10"></div>
+    
+    <div class="container mx-auto p-4 relative z-10">
+        <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+            <h1 class="text-2xl md:text-3xl font-bold text-center md:text-left">SIS-FP / Reporte General</h1>
+            <div class="flex flex-col sm:flex-row items-center gap-4">
+                <div id="userDisplay" class="bg-white text-blue-800 px-4 py-2 rounded-full font-bold text-sm md:text-base"></div>
+                <a href="../menu.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i> REGRESAR
+                </a>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            <!-- Gráfico de Ingreso de Personal por Hora -->
+            <div class="bg-white bg-opacity-10 rounded-lg p-4 backdrop-blur-sm border border-gray-700">
+                <h2 class="text-xl font-bold mb-4">Ingreso de Personal por Hora</h2>
+                <div class="h-64">
+                    <canvas id="personalHourChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Gráfico de Control Vehicular por Tipo -->
+            <div class="bg-white bg-opacity-10 rounded-lg p-4 backdrop-blur-sm border border-gray-700">
+                <h2 class="text-xl font-bold mb-4">Control Ingreso Vehicular por Tipo</h2>
+                <div class="h-64">
+                    <canvas id="vehicularTypeChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Gráfico de Embarcaciones por Tipo -->
+            <div class="bg-white bg-opacity-10 rounded-lg p-4 backdrop-blur-sm border border-gray-700">
+                <h2 class="text-xl font-bold mb-4">Control Ingreso de Embarcaciones por Tipo</h2>
+                <div class="h-64">
+                    <canvas id="embarcacionesTypeChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Tabla de Totales -->
+            <div class="bg-white bg-opacity-10 rounded-lg p-4 backdrop-blur-sm border border-gray-700">
+                <h2 class="text-xl font-bold mb-4">Totales</h2>
+                <table class="w-full">
+                    <tbody>
+                        <tr class="border-b border-gray-700">
+                            <th class="text-left py-2">Total de Protestas</th>
+                            <td id="totalProtestas" class="text-right">0</td>
+                        </tr>
+                        <tr class="border-b border-gray-700">
+                            <th class="text-left py-2">Total de Apoyos de la Fuerza Pública</th>
+                            <td id="totalFuerzaPublica" class="text-right">0</td>
+                        </tr>
+                        <tr class="border-b border-gray-700">
+                            <th class="text-left py-2">Total de Personas Verificadas</th>
+                            <td id="totalPersonasVerificadas" class="text-right">0</td>
+                        </tr>
+                        <tr class="border-b border-gray-700">
+                            <th class="text-left py-2">Total de Vehículos Registrados</th>
+                            <td id="totalVehiculosRegistrados" class="text-right">0</td>
+                        </tr>
+                        <tr>
+                            <th class="text-left py-2">Total de Embarcaciones Registradas</th>
+                            <td id="totalEmbarcacionesRegistradas" class="text-right">0</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Segmentadores -->
+            <div class="bg-white bg-opacity-10 rounded-lg p-4 backdrop-blur-sm border border-gray-700">
+                <h2 class="text-xl font-bold mb-4">Segmentadores</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block mb-2 font-medium">Filtrar por Fecha:</label>
+                        <input type="date" id="filterDate" class="w-full px-4 py-2 rounded bg-white bg-opacity-90 text-black focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block mb-2 font-medium">Filtrar por Tipo de Vehículo:</label>
+                        <select id="filterVehicleType" class="w-full px-4 py-2 rounded bg-white bg-opacity-90 text-black focus:ring-2 focus:ring-blue-500">
+                            <option value="">Todos los tipos</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block mb-2 font-medium">Filtrar por Tipo de Embarcación:</label>
+                        <select id="filterBoatType" class="w-full px-4 py-2 rounded bg-white bg-opacity-90 text-black focus:ring-2 focus:ring-blue-500">
+                            <option value="">Todos los tipos</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="../assets/js/reporte_general.js"></script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIS-FP - Configuración de Usuario</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="assets/css/configuracion.css">
+</head>
+<body class="text-white">
+    <div class="bg-overlay"></div>
+
+    <div class="config-container">
+        <h1 class="config-title">Configuración de Usuario</h1>
+
+        <div class="config-section">
+            <h2 class="section-title">Información Personal</h2>
+            <div class="config-form">
+                <div class="form-group">
+                    <label for="nombre">Nombre:</label>
+                    <input type="text" id="nombre" value="Usuario de Prueba">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" value="usuario@ejemplo.com">
+                </div>
+                <div class="form-group">
+                    <label for="telefono">Teléfono:</label>
+                    <input type="tel" id="telefono" value="123-456-7890">
+                </div>
+            </div>
+        </div>
+
+        <div class="config-section">
+            <h2 class="section-title">Seguridad</h2>
+            <div class="config-form">
+                <div class="form-group">
+                    <label for="password">Nueva Contraseña:</label>
+                    <input type="password" id="password">
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirmar Contraseña:</label>
+                    <input type="password" id="confirmPassword">
+                </div>
+            </div>
+        </div>
+
+        <div class="config-section">
+            <h2 class="section-title">Preferencias</h2>
+            <div class="config-form">
+                <div class="form-group">
+                    <label for="idioma">Idioma:</label>
+                    <select id="idioma">
+                        <option value="es">Español</option>
+                        <option value="en">Inglés</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="tema">Tema:</label>
+                    <select id="tema">
+                        <option value="claro" style="color: black;">Claro</option>
+                        <option value="oscuro">Oscuro</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="config-buttons">
+            <button id="guardarBtn" class="save-btn">Guardar Cambios</button>
+            <button id="cancelarBtn" class="cancel-btn">Cancelar</button>
+            <button id="regresarBtn" class="return-btn">Regresar al Menú</button>
+        </div>
+    </div>
+
+    <script src="assets/js/configuracion.js"></script>
+</body>
+</html>

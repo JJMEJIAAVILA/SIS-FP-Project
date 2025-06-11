@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIS-FP - Apoyo de la Fuerza Pública</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/global.css">
+    <link rel="stylesheet" href="../assets/css/fuerza_publica.css">
+</head>
+<body class="text-white">
+    <div class="container mx-auto p-4 relative z-10">
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold">SIS-FP / Apoyo de la Fuerza Pública</h1>
+            <div class="flex items-center space-x-4">
+                <div id="userDisplay" class="bg-white text-blue-800 px-4 py-2 rounded-full font-bold"></div>
+                <a href="../menu.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center">
+                    <i class="fas fa-arrow-left mr-2"></i> REGRESAR
+                </a>
+            </div>
+        </header>
+
+        <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
+            <div class="relative flex-grow max-w-md">
+                <input type="text" id="searchInput" placeholder="Buscar..." class="w-full px-4 py-2 rounded text-black">
+                <i class="fas fa-search absolute right-3 top-3 text-gray-500"></i>
+            </div>
+            <div class="flex space-x-2">
+                <button id="newRegisterBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center">
+                    <i class="fas fa-plus mr-2"></i> NUEVO REGISTRO
+                </button>
+                <button id="exportExcelBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center">
+                    <i class="fas fa-file-excel mr-2"></i> EXPORTAR EXCEL
+                </button>
+            </div>
+        </div>
+
+        <div id="newRegisterForm" class="bg-white bg-opacity-20 p-4 rounded-lg mb-6 hidden">
+            <h2 class="text-xl font-bold mb-4">Nuevo Registro de Apoyo de la Fuerza Pública</h2>
+            <form id="registerForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <input type="hidden" id="fechaRegistro" name="fechaRegistro">
+                <div><label class="block mb-1">Fecha</label><input type="date" name="fecha" class="w-full px-4 py-2 rounded text-black" required></div>
+                <div><label class="block mb-1">Fuerza Pública</label><input type="text" name="fuerza_publica" class="w-full px-4 py-2 rounded text-black" required></div>
+                <div><label class="block mb-1">Unidades</label><input type="text" name="unidades" class="w-full px-4 py-2 rounded text-black"></div>
+                <div><label class="block mb-1">Hora de Llegada</label><input type="time" name="hora_llegada" class="w-full px-4 py-2 rounded text-black"></div>
+                <div><label class="block mb-1">Hora de Salida</label><input type="time" name="hora_salida" class="w-full px-4 py-2 rounded text-black"></div>
+                <div><label class="block mb-1">Acción Realizada</label><textarea name="accion_realizada" class="w-full px-4 py-2 rounded text-black"></textarea></div>
+                <div><label class="block mb-1">Observaciones</label><textarea name="observaciones" class="w-full px-4 py-2 rounded text-black"></textarea></div>
+                <div class="flex items-end space-x-2">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Guardar</button>
+                    <button type="button" id="cancelFormBtn" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">Cancelar</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="bg-white bg-opacity-10 rounded-lg overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full" id="fuerzaPublicaTable">
+                    <thead class="bg-blue-600">
+                        <tr>
+                            <th class="px-4 py-3 text-center">ITEM</th>
+                            <th class="px-4 py-3">FECHA</th>
+                            <th class="px-4 py-3">FUERZA PÚBLICA</th>
+                            <th class="px-4 py-3">UNIDADES</th>
+                            <th class="px-4 py-3">HORA DE LLEGADA</th>
+                            <th class="px-4 py-3">HORA DE SALIDA</th>
+                            <th class="px-4 py-3">ACCIÓN REALIZADA</th>
+                            <th class="px-4 py-3">OBSERVACIONES</th>
+                            <th class="px-4 py-3 text-center">ACCIÓN</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-700" id="tableBody"></tbody>
+                </table>
+            </div>
+            <div class="px-6 py-4 flex items-center justify-between border-t border-gray-700">
+                <div class="text-sm text-gray-400">Mostrando <span id="currentRecords">0</span> registros</div>
+                <div class="flex space-x-2">
+                    <button class="px-3 py-1 rounded bg-blue-600 text-white disabled:opacity-50" id="prevPageBtn" disabled><i class="fas fa-chevron-left"></i></button>
+                    <span id="currentPage" class="px-3 py-1 rounded bg-blue-600 text-white">1</span>
+                    <button class="px-3 py-1 rounded bg-white bg-opacity-10 hover:bg-opacity-20" id="nextPageBtn"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
+    <script src="../assets/js/fuerza_publica.js"></script>
+</body>
+</html>

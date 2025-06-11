@@ -1,0 +1,48 @@
+/* Fondo global para todas las páginas */
+body {
+    background: url('../assets/img/puerto-fondo.jpg') no-repeat center center fixed;
+    background-size: cover;
+    min-height: 100vh;
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Mejoras para tablas */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 0.5rem;
+    text-align: left;
+}
+
+/* Transiciones suaves para elementos interactivos */
+a, button {
+    transition: all 0.3s ease;
+}
+
+/* Estilos para los contenedores de gráficos */
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+/* Mejoras de accesibilidad para focus */
+input:focus, select:focus, button:focus {
+    outline: 2px solid rgba(59, 130, 246, 0.5);
+    outline-offset: 2px;
+}
+
+/* Clase para el overlay oscuro */
+.bg-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: -1;
+}
