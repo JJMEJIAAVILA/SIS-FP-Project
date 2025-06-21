@@ -10,6 +10,9 @@ node_modules/
 npm-debug.log
 yarn-error.log
 
+# Ignorar variables de entorno
+.env
+
 # Otros archivos que no quieres commitear
 .DS_Store # macOS
 Thumbs.db # Windows
