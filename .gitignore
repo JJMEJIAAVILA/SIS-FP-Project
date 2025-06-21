@@ -1,0 +1,15 @@
+# Archivos de IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Directorios de Node.js (cuando lo usemos)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Otros archivos que no quieres commitear
+.DS_Store # macOS
+Thumbs.db # Windows
