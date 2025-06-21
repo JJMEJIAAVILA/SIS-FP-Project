@@ -1,47 +1,233 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inicio de Sesión Exitoso</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Estilo global para el fondo */
-        body {
-            background-image: url('../assets/img/puerto-fondo.jpg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            background-repeat: no-repeat;
-        }
-        
-        /* Capa oscura semitransparente */
-        .bg-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: -1;
-        }
-    </style>
-</head>
-<body class="bg-gray-900 text-white flex items-center justify-center h-screen">
-    <!-- Capa semitransparente -->
-    <div class="bg-overlay"></div>
-    
-    <!-- Contenido principal -->
-    <div class="text-center z-10">
-        <h1 class="text-3xl font-bold mb-4">Solución Integral de Seguridad Física Portuaria - SIS-FP</h1>
-        <div class="flex items-center justify-center mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>SIS-FP - Inicio de Sesión Exitoso</title>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+            <link rel="stylesheet" href="assets/css/global.css">
+            <style>
+                /* Estilos específicos para esta página */
+                body {
+                    /* Eliminamos el fondo claro aquí para que el bg-overlay funcione */
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                    min-height: 100vh;
+                    /* background-color: #f0f2f5; Esto se elimina */
+                    color: #333; /* Color de texto predeterminado, se ajustará más abajo */
+                    font-family: 'Roboto', sans-serif;
+                    overflow: hidden; /* Evita scrollbar si la imagen de fondo es muy grande */
+                }
+
+                /* Reutilizamos el overlay de login y registro */
+                .bg-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('assets/img/key_lock_bg.jpg') no-repeat center center/cover; /* Asegúrate de que esta ruta a tu imagen de fondo sea correcta */
+                    z-index: -1; /* Lo enviamos al fondo */
+                }
+
+                .success-container {
+                    background-color: rgba(0, 0, 0, 0.7); /* Fondo oscuro semitransparente */
+                    backdrop-filter: blur(8px); /* Efecto de desenfoque */
+                    padding: 2.5rem; /* Ajustado para consistencia */
+                    border-radius: 12px; /* Ajustado para consistencia */
+                    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); /* Sombra más pronunciada */
+                    border: 1px solid rgba(255, 255, 255, 0.1); /* Borde sutil */
+                    text-align: center;
+                    max-width: 600px;
+                    width: 100%; /* Ajuste para responsividad */
+                    box-sizing: border-box; /* Incluir padding y borde en el ancho */
+                    color: white; /* Texto blanco para el fondo oscuro */
+                }
+
+                .success-container h1 {
+                    color: #00a8e8; /* Azul primario para el título */
+                    font-size: 2.5rem;
+                    margin-bottom: 1.5rem;
+                }
+
+                .success-container p {
+                    font-size: 1.1rem;
+                    line-height: 1.6;
+                    margin-bottom: 2rem;
+                    color: rgba(255, 255, 255, 0.9); /* Texto más claro para párrafos */
+                }
+
+                /* Botones generales de la sección */
+                .btn-main, .btn-logout { /* Clase genérica para botones principales */
+                    display: inline-flex; /* Usar flexbox para centrar contenido */
+                    align-items: center;
+                    justify-content: center;
+                    gap: 0.5rem; /* Espacio entre icono y texto */
+                    padding: 0.9rem 1.5rem; /* Ajustado para consistencia */
+                    margin: 0.5rem;
+                    border-radius: 6px; /* Ajustado para consistencia */
+                    font-size: 1rem;
+                    font-weight: 600;
+                    text-decoration: none;
+                    transition: all 0.3s ease; /* Transición general para todos los efectos */
+                    cursor: pointer;
+                    width: auto; /* Ancho automático, no 100% para inline-block */
+                    max-width: 250px; /* Consistencia con otros botones */
+                }
+
+                .btn-main {
+                    background-color: #00a8e8; /* Azul primario */
+                    color: white;
+                    border: none;
+                }
+
+                .btn-main:hover {
+                    background-color: #0095d1;
+                    transform: translateY(-2px);
+                }
+
+                .btn-logout {
+                    background-color: #dc3545; /* Rojo para salir */
+                    color: white;
+                    border: none;
+                }
+
+                .btn-logout:hover {
+                    background-color: #c82333;
+                    transform: translateY(-2px);
+                }
+
+                /* Estilos para el botón de ruta protegida y su resultado */
+                .protected-section {
+                    margin-top: 3rem;
+                    padding-top: 2rem;
+                    border-top: 1px solid rgba(255, 255, 255, 0.2); /* Borde superior más sutil */
+                }
+
+                .protected-section h2 {
+                    color: #00a8e8; /* Título de sección en azul primario */
+                    margin-bottom: 1rem;
+                    font-size: 1.8rem; /* Tamaño de fuente consistente */
+                }
+
+                .protected-section button {
+                    background-color: #6f42c1; /* Púrpura para ruta protegida */
+                    color: white;
+                    border: none;
+                    padding: 1rem 2rem;
+                    border-radius: 6px; /* Ajustado */
+                    font-size: 1.1rem;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    margin-bottom: 1rem;
+                }
+
+                .protected-section button:hover {
+                    background-color: #563d7c;
+                    transform: translateY(-2px);
+                }
+
+                #protectedResult {
+                    background-color: rgba(255, 255, 255, 0.1); /* Fondo claro semitransparente */
+                    border: 1px solid rgba(255, 255, 255, 0.2); /* Borde sutil */
+                    padding: 1rem;
+                    border-radius: 5px;
+                    min-height: 50px;
+                    text-align: left;
+                    white-space: pre-wrap;
+                    word-wrap: break-word;
+                    font-family: monospace;
+                    color: #e0e0e0; /* Texto claro para la respuesta */
+                }
+
+                /* Media queries para responsividad */
+                @media (max-width: 480px) {
+                    .success-container {
+                        padding: 1.5rem;
+                    }
+                    .success-container h1 {
+                        font-size: 2rem;
+                    }
+                    .btn-main, .btn-logout {
+                        width: 100%; /* Botones a ancho completo en móviles */
+                        max-width: none;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+        <div class="bg-overlay"></div> <div class="success-container">
+            <h1><i class="fas fa-check-circle"></i> ¡Inicio de Sesión Exitoso!</h1>
+            <p>Bienvenido al sistema SIS-FP. Has iniciado sesión correctamente.</p>
+
+            <div>
+                <a href="menu.html" class="btn btn-main"> <i class="fas fa-tachometer-alt"></i> Menú Principal </a>
+                <button id="logoutButton" class="btn btn-logout">
+                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                </button>
+            </div>
+
+            <div class="protected-section">
+                <h2>Probar Ruta Protegida</h2>
+                <button id="testProtectedButton">
+                    <i class="fas fa-shield-alt"></i> Solicitar Datos Protegidos
+                </button>
+                <div id="protectedResult">
+                </div>
+            </div>
         </div>
-        <p class="text-lg mb-2">Se Inicio Sesión Correctamente</p>
-        <p class="text-lg">Espere Un Momento Por Favor...</p>
-    </div>
-    <script src="../assets/js/inicio_sesion_exitoso.js"></script>
-</body>
-</html>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const logoutButton = document.getElementById('logoutButton');
+                const testProtectedButton = document.getElementById('testProtectedButton');
+                const protectedResultDiv = document.getElementById('protectedResult');
+
+                // Función para cerrar sesión
+                logoutButton.addEventListener('click', function() {
+                    localStorage.removeItem('token'); // Eliminar el token del almacenamiento local
+                    window.location.href = 'login.html'; // Redirigir al login
+                });
+
+                // Función para probar la ruta protegida
+                testProtectedButton.addEventListener('click', async function() {
+                    protectedResultDiv.textContent = 'Cargando datos protegidos...';
+                    protectedResultDiv.style.color = '#e0e0e0'; // Color de carga
+
+                    const token = localStorage.getItem('token'); // Obtener el token del almacenamiento
+
+                    if (!token) {
+                        protectedResultDiv.textContent = 'Error: No hay token de autenticación. Inicie sesión.';
+                        protectedResultDiv.style.color = '#ff6666'; // Color de error
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch('http://localhost:3000/api/protected', {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${token}` // Incluir el token en las cabeceras
+                            }
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            protectedResultDiv.textContent = 'Datos protegidos recibidos:\n' + JSON.stringify(data, null, 2);
+                            protectedResultDiv.style.color = '#66ff66'; // Color de éxito
+                        } else {
+                            protectedResultDiv.textContent = `Error (${response.status}): ${data.message || 'No se pudo obtener datos protegidos.'}`;
+                            protectedResultDiv.style.color = '#ff6666'; // Color de error
+                        }
+                    } catch (error) {
+                        console.error('Error al acceder a la ruta protegida:', error);
+                        protectedResultDiv.textContent = 'Error de red al intentar acceder a la ruta protegida.';
+                        protectedResultDiv.style.color = '#ff6666'; // Color de error
+                    }
+                });
+            });
+        </script>
+        </body>
+        </html>
