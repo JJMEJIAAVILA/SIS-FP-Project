@@ -8,8 +8,8 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 3000;
 
-// ¡NUEVO! Importar el middleware de autenticación
-const authMiddleware = require('./middleware/authMiddleware'); // Asegúrate de la ruta correcta
+// Importar el middleware de autenticación (nombre de archivo confirmado: authMiddleware.js)
+const authMiddleware = require('./middleware/authMiddleware');
 
 // Middleware
 app.use(cors());
@@ -22,14 +22,14 @@ mongoose.connect(mongoUri)
     .then(() => console.log('MongoDB conectado correctamente'))
     .catch(err => console.error('Error al conectar a MongoDB:', err));
 
-// Esquema de Usuario ACTUALIZADO con nuevos campos
+// Esquema de Usuario (se mantiene el que tenías, es solo para referencia aquí)
 const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    telefono: { type: String, default: '' }, // Nuevo campo para el perfil
-    idioma: { type: String, default: 'es' },  // Nuevo campo para el perfil
-    tema: { type: String, default: 'oscuro' }, // Nuevo campo para el perfil
+    telefono: { type: String, default: '' },
+    idioma: { type: String, default: 'es' },
+    tema: { type: String, default: 'oscuro' },
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -38,7 +38,7 @@ const User = mongoose.model('User', userSchema);
 // --- Clave Secreta para JWT ---
 const JWT_SECRET = process.env.JWT_SECRET || 'miSuperClaveSecretaParaJWT123!';
 
-// --- Rutas existentes ---
+// --- Rutas de Autenticación y Perfil de Usuario ---
 app.get('/', (req, res) => {
     res.send('¡Servidor backend de SIS-FP funcionando!');
 });
@@ -60,7 +60,7 @@ app.post('/api/register', async (req, res) => {
             username,
             email,
             password: hashedPassword,
-            telefono: '', // Valores por defecto para nuevos campos
+            telefono: '',
             idioma: 'es',
             tema: 'oscuro'
         });
@@ -90,8 +90,7 @@ app.post('/api/login', async (req, res) => {
         const payload = {
             id: user._id,
             username: user.username,
-            email: user.email // Incluir el email en el payload del token es útil para el frontend
-            // Puedes añadir otros campos que no sean sensibles aquí, como role, etc.
+            email: user.email
         };
         const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
         res.status(200).json({
@@ -113,19 +112,14 @@ app.get('/api/protected', authMiddleware, (req, res) => {
     });
 });
 
-// --- Rutas para la Configuración de Perfil de Usuario (NUEVAS) ---
-
 // Ruta para obtener el perfil del usuario autenticado
 app.get('/api/user/profile', authMiddleware, async (req, res) => {
     try {
         const userId = req.user.id;
-
-        const user = await User.findById(userId).select('-password'); // Excluir la contraseña
-
+        const user = await User.findById(userId).select('-password');
         if (!user) {
             return res.status(404).json({ message: 'Perfil de usuario no encontrado.' });
         }
-
         res.status(200).json({
             username: user.username,
             email: user.email,
@@ -133,7 +127,6 @@ app.get('/api/user/profile', authMiddleware, async (req, res) => {
             idioma: user.idioma,
             tema: user.tema
         });
-
     } catch (error) {
         console.error('Error al obtener el perfil del usuario:', error);
         res.status(500).json({ message: 'Error interno del servidor al obtener el perfil.' });
@@ -145,33 +138,24 @@ app.put('/api/user/profile', authMiddleware, async (req, res) => {
     try {
         const userId = req.user.id;
         const { username, email, telefono, password, idioma, tema } = req.body;
-
         const user = await User.findById(userId);
-
         if (!user) {
             return res.status(404).json({ message: 'Usuario no encontrado.' });
         }
-
-        // Actualizar campos si se proporcionan y son diferentes
         if (username !== undefined && username !== user.username) user.username = username;
         if (email !== undefined && email !== user.email) user.email = email;
         if (telefono !== undefined && telefono !== user.telefono) user.telefono = telefono;
         if (idioma !== undefined && idioma !== user.idioma) user.idioma = idioma;
         if (tema !== undefined && tema !== user.tema) user.tema = tema;
-
-        // Si se proporciona una nueva contraseña, hashearla y actualizarla
         if (password) {
             const salt = await bcrypt.genSalt(10);
             user.password = await bcrypt.hash(password, salt);
         }
-
         await user.save();
-
         res.status(200).json({ message: 'Perfil actualizado exitosamente.' });
-
     } catch (error) {
         console.error('Error al actualizar el perfil del usuario:', error);
-        if (error.code === 11000) { // Error de clave duplicada
+        if (error.code === 11000) {
             const field = Object.keys(error.keyValue)[0];
             return res.status(409).json({ message: `El ${field} ya está en uso.` });
         }
@@ -179,8 +163,26 @@ app.put('/api/user/profile', authMiddleware, async (req, res) => {
     }
 });
 
-// --- FIN Rutas para la Configuración de Perfil de Usuario ---
 
+// --- Rutas para la gestión de Empresas ---
+// Importar las rutas de Empresas
+const empresaRoutes = require('./routes/empresas');
+
+// Usar las rutas de Empresas bajo el prefijo /api/empresas
+app.use('/api/empresas', empresaRoutes);
+
+// Sirve archivos estáticos del frontend (tus HTML, CSS, JS frontales)
+// __dirname apunta a C:\Users\pc\IdeaProjects\SIS-FP\backend
+// '/../' sube un nivel a C:\Users\pc\IdeaProjects\SIS-FP
+app.use(express.static(__dirname + '/../'));
+
+// Importar las rutas de Vehículos
+const vehiculoRoutes = require('./routes/vehiculos');
+
+// ... después de app.use('/api/empresas', empresaRoutes); o donde tengas tus rutas principales ...
+
+// Usar las rutas de Vehículos bajo el prefijo /api/vehiculos (AÑADE ESTO)
+app.use('/api/vehiculos', vehiculoRoutes);
 
 // Iniciar el servidor
 app.listen(port, () => {
