@@ -1,11 +1,12 @@
-// backend/middleware/authMiddleware.js
+// SIS-FP/backend/middleware/authMiddleware.js
 const jwt = require('jsonwebtoken');
 require('dotenv').config(); // Para acceder a la clave secreta
 
 // Obtener la clave secreta del entorno
 const JWT_SECRET = process.env.JWT_SECRET;
 
-const authMiddleware = (req, res, next) => {
+// La función middleware que protegerá las rutas
+const protect = (req, res, next) => {
     // 1. Obtener el token del encabezado de autorización
     // El token generalmente viene en el formato: "Bearer TOKEN_AQUÍ"
     const authHeader = req.header('Authorization');
@@ -28,7 +29,7 @@ const authMiddleware = (req, res, next) => {
 
         // 3. Adjuntar la información del usuario al objeto de la petición (req.user)
         // Esto permite que las rutas protegidas accedan al ID del usuario, etc.
-        req.user = decoded; // decoded contendrá { id: user._id, username: user.username }
+        req.user = decoded; // decoded contendrá { id: user._id, username: user.username, email: user.email }
 
         // 4. Continuar con la siguiente función middleware o la ruta final
         next();
@@ -39,4 +40,5 @@ const authMiddleware = (req, res, next) => {
     }
 };
 
-module.exports = authMiddleware;
+// Exportar la función 'protect' como una propiedad de un objeto
+module.exports = { protect };

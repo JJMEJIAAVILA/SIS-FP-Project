@@ -1,10 +1,445 @@
-table { min-width: 1200px; }
-th { background-color: rgba(0, 95, 115, 0.9); position: sticky; top: 0; white-space: nowrap; }
-td { padding: 0.75rem 1rem; }
-tr:nth-child(even) { background-color: rgba(255, 255, 255, 0.03); }
-#newRegisterForm { transition: all 0.3s ease; }
+/* SIS-FP/assets/css/luces.css - Estilos para la página de Luces */
+
+/* Ajustes generales del contenedor principal */
+.container {
+    background-color: rgba(0, 0, 0, 0.7); /* Fondo oscuro semitransparente */
+    backdrop-filter: blur(8px); /* Efecto de desenfoque */
+    -webkit-backdrop-filter: blur(8px); /* Compatibilidad con Safari */
+    padding: 2.5rem; /* Padding consistente con otras páginas */
+    border-radius: 12px; /* Bordes más redondeados */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); /* Sombra pronunciada */
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Borde sutil */
+    margin-top: 2rem; /* Margen superior para separarlo del borde de la pantalla */
+    margin-bottom: 2rem; /* Margen inferior */
+    width: 95%; /* Ajuste de ancho para responsividad */
+    box-sizing: border-box; /* Incluir padding y borde en el ancho */
+}
+
+/* Estilos de la cabecera */
+header h1 {
+    color: #00a8e8; /* Color primario para el título */
+    font-size: 2.2rem; /* Tamaño de fuente ligeramente más grande */
+}
+
+#userDisplay {
+    background-color: rgba(255, 255, 255, 0.15) !important; /* Mantener !important para sobrescribir Tailwind */
+    color: white !important; /* Mantener !important */
+    border: 1px solid rgba(255, 255, 255, 0.2); /* Borde sutil */
+    font-weight: normal !important; /* No tan bold como el predeterminado de Tailwind */
+    padding: 0.5rem 1rem !important; /* Ajuste de padding */
+    border-radius: 9999px !important; /* Completamente redondeado */
+}
+
+header a { /* Estilo para el botón REGRESAR */
+    background-color: #6c757d; /* Gris para "Regresar" */
+    color: white;
+    padding: 0.75rem 1.25rem; /* Ajuste de padding */
+    border-radius: 8px; /* Bordes más redondeados */
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+header a:hover {
+    background-color: #5a6268;
+    transform: translateY(-2px);
+}
+
+/* Barra de búsqueda e inputs de filtro/acción */
+#searchInput { /* input de búsqueda por su ID */
+    background-color: rgba(255, 255, 255, 0.08) !important; /* Fondo de input sutilmente claro */
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Borde más pronunciado */
+    color: white !important; /* Texto del input en blanco */
+    padding: 0.8rem 1rem; /* Ajuste de padding */
+    font-size: 1rem;
+    box-sizing: border-box;
+    /* text-transform: uppercase; No lo forzamos aquí, el JS puede manejar la capitalización del placeholder */
+}
+
+#searchInput::placeholder {
+    color: rgba(255, 255, 255, 0.5); /* Placeholder más claro */
+}
+
+.flex-wrap .relative .fas.fa-search { /* Icono de búsqueda */
+    color: rgba(255, 255, 255, 0.6); /* Color del icono */
+    right: 1rem; /* Posición ajustada */
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.flex-wrap .space-x-2 button { /* Botones de NUEVO REGISTRO y EXPORTAR */
+    padding: 0.9rem 1.5rem; /* Padding consistente con otros botones */
+    border-radius: 8px; /* Bordes más redondeados */
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    font-weight: bold;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; /* Espacio entre icono y texto */
+}
+
+#newRegisterBtn {
+    background-color: #28a745; /* Verde para "Nuevo Registro" */
+    color: white;
+}
+#newRegisterBtn:hover {
+    background-color: #218838;
+    transform: translateY(-2px);
+}
+
+#exportExcelBtn {
+    background-color: #00a8e8; /* Azul primario para "Exportar" */
+    color: white;
+}
+#exportExcelBtn:hover {
+    background-color: #0095d1;
+    transform: translateY(-2px);
+}
+
+/* Formulario de Nuevo Registro/Edición */
+#newRegisterForm {
+    background-color: rgba(0, 0, 0, 0.5); /* Sin !important, como en empresas.css */
+    backdrop-filter: blur(5px); /* Desenfoque para el formulario */
+    -webkit-backdrop-filter: blur(5px); /* Compatibilidad con Safari */
+    padding: 2rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    transition: all 0.4s ease-in-out; /* Transición más suave */
+    transform-origin: top; /* Animación desde arriba */
+}
+
+#newRegisterForm.hidden {
+    opacity: 0;
+    transform: scaleY(0);
+    height: 0;
+    overflow: hidden;
+    padding: 0 2rem; /* Reducir padding horizontal también al ocultar */
+    margin-bottom: 0;
+}
+
+#newRegisterForm h2 {
+    color: white; /* Título del formulario en blanco */
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+}
+
+#registerForm label {
+    color: rgba(255, 255, 255, 0.9); /* Texto de label ligeramente translúcido */
+    font-weight: bold;
+    margin-bottom: 0.3rem; /* Espacio entre label y input */
+}
+
+#registerForm input[type="text"],
+#registerForm input[type="date"],
+#registerForm select,
+#registerForm textarea {
+    background-color: rgba(255, 255, 255, 0.1) !important; /* Mantener !important */
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white !important; /* Mantener !important */
+    padding: 0.8rem 1rem;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+}
+
+/* Para campos de texto que deberían ser uppercase (Área, Circuito, Luminaria, Observaciones) */
+#registerForm input[name="area"],
+#registerForm input[name="circuito"],
+#registerForm input[name="luminaria"],
+#registerForm textarea[name="observaciones"] {
+    text-transform: uppercase;
+}
+/* Asegura que el texto seleccionado en el select también sea uppercase si es necesario, aunque el select en sí no tiene text-transform */
+#registerForm select {
+    text-transform: uppercase;
+}
+
+
+#registerForm input::placeholder,
+#registerForm textarea::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+#registerForm select option {
+    background-color: #333; /* Fondo oscuro para las opciones del select */
+    color: white;
+}
+
+#registerForm button[type="submit"],
+#registerForm button[type="button"] { /* Botones GUARDAR y CANCELAR dentro del formulario */
+    padding: 0.9rem 1.8rem;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    font-size: 1rem;
+}
+
+#registerForm button[type="submit"] { /* Asumo que el botón de guardar es el primero en el HTML */
+    background-color: #00a8e8; /* Azul primario para "Guardar" */
+    color: white;
+}
+#registerForm button[type="submit"]:hover {
+    background-color: #0095d1;
+    transform: translateY(-2px);
+}
+
+#cancelFormBtn {
+    background-color: #6c757d; /* Gris para "Cancelar" */
+    color: white;
+}
+#cancelFormBtn:hover {
+    background-color: #5a6268;
+    transform: translateY(-2px);
+}
+
+/* Estilos de la tabla principal de Luces */
+div.bg-white.bg-opacity-10.rounded-lg.overflow-hidden { /* Contenedor general de la tabla principal */
+    background-color: rgba(0, 0, 0, 0.5); /* Sin !important, como en empresas.css */
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+table {
+    min-width: 1200px; /* Ancho mínimo para la tabla, según tu indicación */
+    color: white; /* Color de texto general de la tabla */
+    border-collapse: collapse; /* Asegura que los bordes se vean bien */
+}
+
+th {
+    background-color: rgba(0, 95, 115, 0.9); /* Azul oscuro de tu tema */
+    position: sticky;
+    top: 0;
+    white-space: nowrap;
+    text-align: center; /* Centrar texto en TH por defecto */
+    padding: 1rem 0.75rem; /* Ajustar padding de th */
+    color: white; /* Color de texto de los encabezados */
+    font-weight: bold;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+td {
+    padding: 0.75rem 1rem; /* Padding especificado */
+    white-space: nowrap; /* Evitar que el texto se rompa en varias líneas */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Para textos largos */
+    color: white; /* Color de las celdas */
+    border-color: rgba(255, 255, 255, 0.1); /* Líneas divisorias de tabla más sutiles */
+    vertical-align: middle; /* Centrar verticalmente el contenido de las celdas */
+    text-align: left; /* Alineación por defecto para datos en TD */
+}
+
+/* Ajustes de alineación específicos para celdas de tabla */
+#lucesTable td:nth-child(1), /* ITEM */
+#lucesTable td:nth-child(6) /* ACCIÓN */ {
+    text-align: center;
+}
+/* Alineación para la tabla de historial */
+#historialTable td:nth-child(1), /* ITEM */
+#historialTable td:nth-child(6), /* FECHA DE FALLA */
+#historialTable td:nth-child(7), /* FECHA DE ARREGLO */
+#historialTable td:nth-child(9) /* ACCIÓN */ {
+    text-align: center;
+}
+
+
+tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.03); /* Filas pares ligeramente más claras, según tu indicación */
+}
+
+.hover\:bg-white.hover\:bg-opacity-10:hover { /* Efecto hover en filas (sobreescribe la clase de Tailwind) */
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Estilos de la tabla de Historial (replicando el estilo de la principal) */
+div.bg-white.bg-opacity-10.rounded-lg.overflow-hidden.mt-6 { /* Contenedor del historial */
+    background-color: rgba(0, 0, 0, 0.5); /* Mismo fondo y desenfoque */
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    padding-bottom: 1.5rem; /* Ajustar padding para que el h2 quede bien y la tabla no se pegue */
+}
+
+div.bg-white.bg-opacity-10.rounded-lg.overflow-hidden.mt-6 h2 {
+    color: white;
+    margin-bottom: 1rem; /* Espacio debajo del título del historial */
+}
+
+#historialTable {
+    min-width: 1400px; /* Puedes ajustar esto si las columnas del historial son muchas y el ancho de 1200px es insuficiente */
+    color: white;
+    border-collapse: collapse;
+}
+
+#historialTable th { /* Misma cabecera para el historial */
+    background-color: rgba(0, 95, 115, 0.9);
+    position: sticky;
+    top: 0;
+    white-space: nowrap;
+    text-align: center;
+    padding: 1rem 0.75rem;
+    color: white;
+    font-weight: bold;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+#historialTable td { /* Mismas celdas para el historial */
+    padding: 0.75rem 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: white;
+    border-color: rgba(255, 255, 255, 0.1);
+    vertical-align: middle;
+    text-align: left;
+}
+
+#historialTable tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+
+/* Botones de acción en las tablas (Editar, Eliminar) */
+.edit-btn, .delete-btn, .historial-edit-btn, .historial-delete-btn {
+    padding: 0.5rem 0.8rem;
+    border-radius: 6px; /* Bordes redondeados */
+    font-weight: bold;
+    font-size: 0.85rem;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    margin: 0.2rem; /* Espacio entre botones */
+}
+
+.edit-btn, .historial-edit-btn {
+    background-color: #ffc107; /* Amarillo para editar */
+    color: black;
+}
+.edit-btn:hover, .historial-edit-btn:hover {
+    background-color: #e0a800;
+    transform: translateY(-1px);
+}
+
+.delete-btn, .historial-delete-btn {
+    background-color: #dc3545; /* Rojo para eliminar */
+    color: white;
+}
+.delete-btn:hover, .historial-delete-btn:hover {
+    background-color: #c82333;
+    transform: translateY(-1px);
+}
+
+/* Paginación (igual que en otras páginas) */
+.px-6.py-4.flex.items-center.justify-between.border-t.border-gray-700 {
+    border-top: 1px solid rgba(255, 255, 255, 0.15); /* Borde superior de paginación */
+    color: rgba(255, 255, 255, 0.7); /* Color de texto para el contador de registros */
+}
+
+#prevPageBtn, #nextPageBtn, #currentPage {
+    background-color: rgba(255, 255, 255, 0.1) !important; /* Mantener !important */
+    color: white !important; /* Mantener !important */
+    padding: 0.5rem 1rem !important;
+    border-radius: 0.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+#prevPageBtn:hover, #nextPageBtn:hover:not(:disabled) {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+#prevPageBtn:disabled, #nextPageBtn:disabled {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    cursor: not-allowed;
+}
+
+/* Media Queries para Responsividad (adaptadas de tus indicaciones) */
 @media (max-width: 1024px) {
-    .container { padding: 1rem; }
-    header { flex-direction: column; gap: 1rem; text-align: center; }
-    #newRegisterForm .grid { grid-template-columns: 1fr !important; }
+    .container {
+        padding: 1rem; /* Padding más pequeño */
+        margin: 1rem auto;
+        width: 98%;
+    }
+
+    header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+        align-items: center;
+    }
+
+    header h1 {
+        font-size: 1.8rem;
+    }
+
+    .flex-wrap {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+
+    .flex-wrap .relative.flex-grow {
+        max-width: 100%;
+    }
+
+    .flex-wrap .space-x-2 {
+        flex-direction: column;
+        width: 100%;
+        gap: 0.8rem;
+    }
+
+    .flex-wrap .space-x-2 button {
+        width: 100%;
+        max-width: 300px;
+        margin: 0 auto;
+    }
+
+    #newRegisterForm .grid {
+        grid-template-columns: 1fr !important; /* Formulario en una columna */
+    }
+
+    table {
+        font-size: 0.8rem;
+        min-width: 100%; /* Las tablas se adaptan */
+        display: block;
+        overflow-x: auto; /* Scroll horizontal si es necesario */
+        -webkit-overflow-scrolling: touch;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 0.6rem;
+        white-space: nowrap; /* Mantener una línea, con scroll */
+    }
+
+    .px-6.py-4.flex.items-center.justify-between {
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 0.8rem;
+    }
+    header h1 {
+        font-size: 1.5rem;
+    }
+    .flex-wrap .relative input,
+    .flex-wrap .space-x-2 button,
+    #newRegisterForm input,
+    #newRegisterForm input[type="date"],
+    #newRegisterForm select,
+    #newRegisterForm textarea,
+    #newRegisterForm .flex.items-end button {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.9rem;
+    }
+    #newRegisterForm h2 {
+        font-size: 1.5rem;
+    }
+    .edit-btn, .delete-btn, .historial-edit-btn, .historial-delete-btn {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.75rem;
+    }
 }

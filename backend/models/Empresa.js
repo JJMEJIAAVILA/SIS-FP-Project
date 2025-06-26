@@ -1,82 +1,79 @@
-// SIS-FP/models/Empresa.js
+// SIS-FP/backend/models/Empresa.js
 const mongoose = require('mongoose');
 
 const empresaSchema = new mongoose.Schema({
-    // El campo '_id' será generado automáticamente por MongoDB
     fecha_entrada: {
-        type: String, // Usamos String para flexibilidad con el formato 'YYYY-MM-DD HH:MM'
+        type: Date,
         required: true
     },
+    hora_entrada: { // Nuevo campo para la hora de entrada
+        type: String,
+        default: ''
+    },
     fecha_salida: {
-        type: String, // También String, por defecto '-' o cuando se actualice
+        type: Date,
+        default: null // Puede ser nulo si la empresa aún no ha salido
+    },
+    hora_salida: { // Nuevo campo para la hora de salida
+        type: String,
+        default: ''
+    },
+    nombre_empresa: {
+        type: String,
+        required: true,
+        uppercase: true
+    },
+    identificacion: {
+        type: String,
+        required: true,
+        unique: true // La identificación debe ser única para cada registro
+    },
+    area_ingreso: {
+        type: String,
+        uppercase: true,
+        default: ''
+    },
+    empresa: {
+        type: String,
+        uppercase: true,
+        default: ''
+    },
+    carne: {
+        type: String,
+        uppercase: true,
         default: '-'
     },
-    nombre_empresa: { // Corresponde a 'nombre_empresa' en tu formulario HTML
+    tipo_empresa: { // CAMBIO AQUÍ: Nuevas opciones de enum
         type: String,
-        required: true,
-        uppercase: true,
-        trim: true
+        enum: ['FUNCIONARIO', 'CONTRATISTA FIJO', 'CONTRATISTA EVENTUAL', 'VISITANTE'], // Nuevas opciones
+        default: '', // Puede ser vacío o un valor por defecto si lo prefieres
+        required: true // Sigue siendo obligatorio
     },
-    identificacion: { // Corresponde a 'identificacion' en tu formulario HTML
+    // CAMBIO AQUÍ: Campo 'area' eliminado
+    dependencia: {
         type: String,
-        required: true,
         uppercase: true,
-        trim: true
+        default: ''
     },
-    area_ingreso: { // Corresponde a 'area_ingreso' en tu formulario HTML
+    dispositivo: {
         type: String,
-        required: true,
         uppercase: true,
-        trim: true
+        default: ''
     },
-    empresa: { // Corresponde a 'empresa' en tu formulario HTML
+    codigo_dispositivo: {
         type: String,
-        required: true,
         uppercase: true,
-        trim: true
+        default: ''
     },
-    carne: { // Corresponde a 'carne' en tu formulario HTML
+    observaciones: {
         type: String,
-        default: '-',
         uppercase: true,
-        trim: true
-    },
-    tipo_empresa: { // Corresponde a 'tipo_empresa' (sexo) en tu formulario HTML
-        type: String,
-        required: true,
-        uppercase: true,
-        trim: true
-    },
-    area: { // Corresponde a 'area' (área interventora) en tu formulario HTML
-        type: String,
-        default: '-',
-        uppercase: true,
-        trim: true
-    },
-    dependencia: { // Corresponde a 'dependencia' en tu formulario HTML
-        type: String,
-        default: '-',
-        uppercase: true,
-        trim: true
-    },
-    dispositivo: { // Corresponde a 'dispositivo' en tu formulario HTML
-        type: String,
-        default: '-',
-        uppercase: true,
-        trim: true
-    },
-    codigo_dispositivo: { // Corresponde a 'codigo_dispositivo' en tu formulario HTML
-        type: String,
-        default: '-',
-        uppercase: true,
-        trim: true
-    },
-    observaciones: { // Corresponde a 'observaciones' en tu formulario HTML
-        type: String,
-        default: '-',
-        uppercase: true,
-        trim: true
+        default: ''
     }
-}, { timestamps: true }); // 'timestamps' añade createdAt y updatedAt automáticamente
+}, {
+    timestamps: true // Añade createdAt y updatedAt automáticamente
+});
 
-module.exports = mongoose.model('Empresa', empresaSchema);
+const Empresa = mongoose.model('Empresa', empresaSchema);
+
+module.exports = Empresa;

@@ -1,103 +1,162 @@
-const Empresa = require('../models/Empresa'); // Ruta correcta para ir de 'controllers' a 'models'
+// SIS-FP/backend/controllers/empresaController.js
+const Empresa = require('../models/Empresa');
+console.log('--- Cargando empresaController.js ---'); // Línea de depuración
 
-// Obtener todas las empresas
-exports.getEmpresas = async (req, res) => {
+// @desc    Obtener todas las empresas
+// @route   GET /api/empresas
+// @access  Protected
+const getEmpresas = async (req, res) => { // Línea 15
     try {
-        const empresas = await Empresa.find().sort({ createdAt: -1 }); // Ordenar por las más recientes
-        res.status(200).json(empresas);
+        const empresas = await Empresa.find().sort({ createdAt: -1 }); // Ordenar por fecha de creación más reciente
+        res.status(200).json({ empresas });
     } catch (error) {
         console.error('Error al obtener empresas:', error);
-        res.status(500).json({ message: 'Error interno del servidor al obtener empresas.' });
+        res.status(500).json({ message: 'Error interno del servidor al obtener las empresas.' });
     }
 };
 
-// Crear una nueva empresa
-exports.createEmpresa = async (req, res) => {
+// @desc    Crear una nueva empresa
+// @route   POST /api/empresas
+// @access  Protected
+const createEmpresa = async (req, res) => {
+    const {
+        fecha_entrada, hora_entrada,
+        nombre_empresa, identificacion, area_ingreso, empresa, carne,
+        tipo_empresa, dependencia, dispositivo, codigo_dispositivo, observaciones
+    } = req.body;
+
+    if (!fecha_entrada || !hora_entrada || !nombre_empresa || !identificacion || !area_ingreso || !empresa || !tipo_empresa) {
+        return res.status(400).json({ message: 'Por favor, complete todos los campos obligatorios: Fecha Entrada, Hora Entrada, Nombre Empresa, Identificación, Área Ingreso, Empresa, Tipo Empresa.' });
+    }
+
     try {
-        const {
-            fecha_entrada,
-            nombre_empresa,
-            identificacion,
-            area_ingreso,
-            empresa,
-            carne,
-            tipo_empresa,
-            area,
-            dependencia,
-            dispositivo,
-            codigo_dispositivo,
-            observaciones
-        } = req.body;
+        const existingEmpresa = await Empresa.findOne({ identificacion });
+        if (existingEmpresa) {
+            return res.status(409).json({ message: `La identificación ${identificacion} ya está registrada.` });
+        }
 
         const newEmpresa = new Empresa({
-            fecha_entrada,
-            nombre_empresa,
-            identificacion,
-            area_ingreso,
-            empresa,
-            carne,
-            tipo_empresa,
-            area,
-            dependencia,
-            dispositivo,
-            codigo_dispositivo,
-            observaciones
+            fecha_entrada: new Date(fecha_entrada),
+            hora_entrada,
+            nombre_empresa: nombre_empresa.toUpperCase(),
+            identificacion: identificacion.toUpperCase(),
+            area_ingreso: area_ingreso.toUpperCase(),
+            empresa: empresa.toUpperCase(),
+            carne: carne ? carne.toUpperCase() : '-',
+            tipo_empresa: tipo_empresa.toUpperCase(),
+            dependencia: dependencia ? dependencia.toUpperCase() : '-',
+            dispositivo: dispositivo ? dispositivo.toUpperCase() : '-',
+            codigo_dispositivo: codigo_dispositivo ? codigo_dispositivo.toUpperCase() : '-',
+            observaciones: observaciones ? observaciones.toUpperCase() : '-'
         });
 
         await newEmpresa.save();
-        res.status(201).json({ message: 'Empresa registrada exitosamente', empresa: newEmpresa });
+        res.status(201).json({ message: 'Registro de empresa creado exitosamente.', empresa: newEmpresa });
     } catch (error) {
         console.error('Error al crear empresa:', error);
-        res.status(500).json({ message: 'Error interno del servidor al crear empresa.' });
+        res.status(500).json({ message: 'Error interno del servidor al crear el registro de empresa.' });
     }
 };
 
-// Actualizar una empresa por ID
-exports.updateEmpresa = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const updatedEmpresa = await Empresa.findByIdAndUpdate(id, req.body, { new: true });
+// @desc    Actualizar una empresa por ID
+// @route   PUT /api/empresas/:id
+// @access  Protected
+const updateEmpresa = async (req, res) => {
+    const { id } = req.params;
+    const {
+        fecha_entrada, hora_entrada,
+        nombre_empresa, identificacion, area_ingreso, empresa, carne,
+        tipo_empresa, dependencia, dispositivo, codigo_dispositivo, observaciones
+    } = req.body;
 
-        if (!updatedEmpresa) {
-            return res.status(404).json({ message: 'Empresa no encontrada.' });
+    try {
+        const empresaToUpdate = await Empresa.findById(id);
+
+        if (!empresaToUpdate) {
+            return res.status(404).json({ message: 'Registro de empresa no encontrado.' });
         }
-        res.status(200).json({ message: 'Empresa actualizada exitosamente', empresa: updatedEmpresa });
+
+        if (identificacion && identificacion.toUpperCase() !== empresaToUpdate.identificacion) {
+            const existingIdentificacion = await Empresa.findOne({ identificacion: identificacion.toUpperCase() });
+            if (existingIdentificacion && String(existingIdentificacion._id) !== id) {
+                return res.status(409).json({ message: `La identificación ${identificacion} ya está registrada en otro registro.` });
+            }
+        }
+
+        empresaToUpdate.fecha_entrada = fecha_entrada ? new Date(fecha_entrada) : empresaToUpdate.fecha_entrada;
+        empresaToUpdate.hora_entrada = hora_entrada || empresaToUpdate.hora_entrada;
+        empresaToUpdate.nombre_empresa = nombre_empresa ? nombre_empresa.toUpperCase() : empresaToUpdate.nombre_empresa;
+        empresaToUpdate.identificacion = identificacion ? identificacion.toUpperCase() : empresaToUpdate.identificacion;
+        empresaToUpdate.area_ingreso = area_ingreso ? area_ingreso.toUpperCase() : empresaToUpdate.area_ingreso;
+        empresaToUpdate.empresa = empresa ? empresa.toUpperCase() : empresaToUpdate.empresa;
+        empresaToUpdate.carne = carne ? carne.toUpperCase() : empresaToUpdate.carne;
+        empresaToUpdate.tipo_empresa = tipo_empresa ? tipo_empresa.toUpperCase() : empresaToUpdate.tipo_empresa;
+        empresaToUpdate.dependencia = dependencia ? dependencia.toUpperCase() : empresaToUpdate.dependencia;
+        empresaToUpdate.dispositivo = dispositivo ? dispositivo.toUpperCase() : empresaToUpdate.dispositivo;
+        empresaToUpdate.codigo_dispositivo = codigo_dispositivo ? codigo_dispositivo.toUpperCase() : empresaToUpdate.codigo_dispositivo;
+        empresaToUpdate.observaciones = observaciones ? observaciones.toUpperCase() : empresaToUpdate.observaciones;
+
+        await empresaToUpdate.save();
+        res.status(200).json({ message: 'Registro de empresa actualizado exitosamente.', empresa: empresaToUpdate });
     } catch (error) {
         console.error('Error al actualizar empresa:', error);
-        res.status(500).json({ message: 'Error interno del servidor al actualizar empresa.' });
+        res.status(500).json({ message: 'Error interno del servidor al actualizar el registro de empresa.' });
     }
 };
 
-// Actualizar solo la fecha de salida de una empresa
-exports.updateFechaSalida = async (req, res) => {
+// @desc    Eliminar una empresa por ID
+// @route   DELETE /api/empresas/:id
+// @access  Protected
+const deleteEmpresa = async (req, res) => {
+    const { id } = req.params;
+
     try {
-        const { id } = req.params;
-        const { fecha_salida } = req.body;
+        const empresa = await Empresa.findByIdAndDelete(id);
 
-        const updatedEmpresa = await Empresa.findByIdAndUpdate(id, { fecha_salida }, { new: true });
-
-        if (!updatedEmpresa) {
-            return res.status(404).json({ message: 'Empresa no encontrada.' });
+        if (!empresa) {
+            return res.status(404).json({ message: 'Registro de empresa no encontrado.' });
         }
-        res.status(200).json({ message: 'Fecha de salida actualizada exitosamente', empresa: updatedEmpresa });
-    } catch (error) {
-        console.error('Error al actualizar fecha de salida:', error);
-        res.status(500).json({ message: 'Error interno del servidor al actualizar fecha de salida.' });
-    }
-};
 
-// Eliminar una empresa por ID
-exports.deleteEmpresa = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const deletedEmpresa = await Empresa.findByIdAndDelete(id);
-
-        if (!deletedEmpresa) {
-            return res.status(404).json({ message: 'Empresa no encontrada.' });
-        }
-        res.status(200).json({ message: 'Empresa eliminada exitosamente' });
+        res.status(200).json({ message: 'Registro de empresa eliminado exitosamente.' });
     } catch (error) {
         console.error('Error al eliminar empresa:', error);
-        res.status(500).json({ message: 'Error interno del servidor al eliminar empresa.' });
+        res.status(500).json({ message: 'Error interno del servidor al eliminar el registro de empresa.' });
     }
+};
+
+// @desc    Registrar fecha y hora de salida para una empresa
+// @route   PUT /api/empresas/:id/salida
+// @access  Protected
+const updateSalida = async (req, res) => {
+    const { id } = req.params;
+    const { fecha_salida, hora_salida } = req.body;
+
+    if (!fecha_salida || !hora_salida) {
+        return res.status(400).json({ message: 'La fecha y hora de salida son obligatorias.' });
+    }
+
+    try {
+        const empresaToUpdate = await Empresa.findById(id);
+
+        if (!empresaToUpdate) {
+            return res.status(404).json({ message: 'Registro de empresa no encontrado.' });
+        }
+
+        empresaToUpdate.fecha_salida = new Date(fecha_salida);
+        empresaToUpdate.hora_salida = hora_salida;
+
+        await empresaToUpdate.save();
+        res.status(200).json({ message: 'Fecha y hora de salida registradas exitosamente.', empresa: empresaToUpdate });
+    } catch (error) {
+        console.error('Error al registrar salida de empresa:', error);
+        res.status(500).json({ message: 'Error interno del servidor al registrar la salida.' });
+    }
+};
+
+module.exports = {
+    getEmpresas,
+    createEmpresa,
+    updateEmpresa,
+    deleteEmpresa,
+    updateSalida
 };

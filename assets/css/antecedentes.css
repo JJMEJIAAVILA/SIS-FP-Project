@@ -1,4 +1,4 @@
-/* assets/css/embarcaciones.css - Basado en la base funcional establecida */
+/* assets/css/antecedentes.css - Versión Optimizada y Consistente (Copia de empresas.css) */
 
 /* Ajustes generales del contenedor principal */
 .container {
@@ -21,7 +21,6 @@ header h1 {
     font-size: 2.2rem; /* Tamaño de fuente ligeramente más grande */
 }
 
-/* ESTILO ESPECÍFICO PARA EL userDisplay (SOBRESCRITO DE TAILWIND EN EL HTML) */
 #userDisplay {
     background-color: rgba(255, 255, 255, 0.15); /* Fondo semitransparente para el nombre de usuario */
     color: white; /* Texto blanco */
@@ -85,17 +84,17 @@ header a:hover {
     transform: translateY(-2px);
 }
 
-#exportExcelBtn { /* Mantener el ID original de tu HTML 'exportExcelBtn' */
+#exportExcelBtn { /* CORREGIDO: Usar ID exportExcelBtn como en el HTML de antecedentes */
     background-color: #00a8e8; /* Azul primario para "Exportar" */
     color: white;
 }
-#exportExcelBtn:hover {
+#exportExcelBtn:hover { /* CORREGIDO: Usar ID exportExcelBtn */
     background-color: #0095d1;
     transform: translateY(-2px);
 }
 
-/* Formulario de Nuevo Registro/Edición de Embarcaciones */
-#newRegisterForm, #salidaForm { /* Aplicar estilos a ambos formularios */
+/* Formulario de Nuevo Registro/Edición */
+#newRegisterForm {
     background-color: rgba(0, 0, 0, 0.5); /* Fondo oscuro más transparente para el formulario */
     backdrop-filter: blur(5px); /* Desenfoque para el formulario */
     -webkit-backdrop-filter: blur(5px);
@@ -107,7 +106,7 @@ header a:hover {
     transform-origin: top; /* Animación desde arriba */
 }
 
-#newRegisterForm.hidden, #salidaForm.hidden {
+#newRegisterForm.hidden {
     opacity: 0;
     transform: scaleY(0);
     height: 0;
@@ -116,13 +115,13 @@ header a:hover {
     margin-bottom: 0;
 }
 
-#newRegisterForm h2, #salidaForm h2 {
+#newRegisterForm h2 {
     color: white; /* Título del formulario en blanco */
     font-size: 1.8rem;
     margin-bottom: 1.5rem;
 }
 
-#registerForm label, #salidaRegistroForm label {
+#registerForm label {
     color: rgba(255, 255, 255, 0.9); /* Texto de label ligeramente translúcido */
     font-weight: bold;
     margin-bottom: 0.3rem; /* Espacio entre label y input */
@@ -130,8 +129,7 @@ header a:hover {
 
 #registerForm input,
 #registerForm select,
-#registerForm textarea,
-#salidaRegistroForm input { /* Aplicar estilos a inputs de ambos formularios */
+#registerForm textarea {
     background-color: rgba(255, 255, 255, 0.1); /* Fondo de inputs/selects/textarea */
     border: 1px solid rgba(255, 255, 255, 0.3);
     color: white;
@@ -142,8 +140,7 @@ header a:hover {
 }
 
 #registerForm input::placeholder,
-#registerForm textarea::placeholder,
-#salidaRegistroForm input::placeholder {
+#registerForm textarea::placeholder {
     color: rgba(255, 255, 255, 0.6);
 }
 
@@ -152,7 +149,7 @@ header a:hover {
     color: white;
 }
 
-#registerForm .flex.items-end button, #salidaRegistroForm .flex.items-end button { /* Botones GUARDAR y CANCELAR dentro del formulario */
+#registerForm .flex.items-end button { /* Botones GUARDAR y CANCELAR dentro del formulario */
     padding: 0.9rem 1.8rem;
     border-radius: 8px;
     font-weight: bold;
@@ -160,20 +157,20 @@ header a:hover {
     font-size: 1rem;
 }
 
-#registerForm button[type="submit"], #salidaRegistroForm button[type="submit"] {
-    background-color: #00a8e8; /* Azul primario para "Guardar" / "Registrar Zarpe" */
+#registerForm button[type="submit"] {
+    background-color: #00a8e8; /* Azul primario para "Guardar" */
     color: white;
 }
-#registerForm button[type="submit"]:hover, #salidaRegistroForm button[type="submit"]:hover {
+#registerForm button[type="submit"]:hover {
     background-color: #0095d1;
     transform: translateY(-2px);
 }
 
-#cancelFormBtn, #cancelSalidaBtn {
+#cancelFormBtn {
     background-color: #6c757d; /* Gris para "Cancelar" */
     color: white;
 }
-#cancelFormBtn:hover, #cancelSalidaBtn:hover {
+#cancelFormBtn:hover {
     background-color: #5a6268;
     transform: translateY(-2px);
 }
@@ -189,7 +186,7 @@ header a:hover {
 }
 
 table {
-    min-width: 1800px; /* Ancho mínimo ajustado para la tabla de embarcaciones */
+    min-width: 1600px; /* Mantener ancho mínimo para la tabla */
     color: white; /* Color de texto general de la tabla */
 }
 
@@ -198,7 +195,7 @@ th {
     position: sticky;
     top: 0;
     white-space: nowrap;
-    text-align: center; /* Centrar texto en los encabezados */
+    text-align: center;
     padding: 1rem 0.75rem; /* Ajustar padding de th */
     color: white; /* Color de texto de los encabezados */
 }
@@ -211,15 +208,15 @@ td {
 }
 
 tr:nth-child(even) {
-    background-color: rgba(255, 255, 255, 0.05); /* Filas pares ligeramente más claras (corregido de 0.03 a 0.05 para consistencia) */
+    background-color: rgba(255, 255, 255, 0.05); /* Filas pares ligeramente más claras */
 }
 
 .hover\:bg-white.hover\:bg-opacity-10:hover { /* Efecto hover en filas */
     background-color: rgba(255, 255, 255, 0.15);
 }
 
-/* Botones de acción en la tabla (Editar, Zarpe, Eliminar) */
-.edit-btn, .salida-btn, .delete-btn {
+/* Botones de acción en la tabla (Editar, Eliminar, Verificar) */
+.edit-btn, .delete-btn, .verify-btn { /* Incluir .verify-btn aquí */
     padding: 0.5rem 0.8rem;
     border-radius: 6px; /* Bordes redondeados */
     font-weight: bold;
@@ -237,21 +234,22 @@ tr:nth-child(even) {
     transform: translateY(-1px);
 }
 
-.salida-btn {
-    background-color: #00a8e8; /* Azul primario para Zarpe */
-    color: white;
-}
-.salida-btn:hover {
-    background-color: #0095d1;
-    transform: translateY(-1px);
-}
-
 .delete-btn {
     background-color: #dc3545; /* Rojo para eliminar */
     color: white;
 }
 .delete-btn:hover {
     background-color: #c82333;
+    transform: translateY(-1px);
+}
+
+/* Estilo específico para el botón de Verificar (azul) */
+.verify-btn {
+    background-color: #007bff; /* Azul estándar para botones de acción */
+    color: white;
+}
+.verify-btn:hover {
+    background-color: #0069d9;
     transform: translateY(-1px);
 }
 
@@ -279,7 +277,7 @@ tr:nth-child(even) {
 /* Media Queries para Responsividad */
 @media (max-width: 1024px) {
     .container {
-        padding: 1.5rem; /* Ajustado para más espacio que 1rem, pero menos que el desktop */
+        padding: 1.5rem;
         margin: 1rem auto;
         width: 98%; /* Ocupar casi todo el ancho en tabletas */
     }
@@ -317,7 +315,7 @@ tr:nth-child(even) {
         margin: 0 auto; /* Centrar botones apilados */
     }
 
-    #newRegisterForm .grid, #salidaForm .grid { /* Aplica a ambos formularios */
+    #newRegisterForm .grid {
         grid-template-columns: 1fr !important; /* Siempre una columna en tabletas y móviles */
     }
 
@@ -353,16 +351,14 @@ tr:nth-child(even) {
     #registerForm input,
     #registerForm select,
     #registerForm textarea,
-    #salidaRegistroForm input, /* Asegurar que inputs de salida también se ajusten */
-    #registerForm .flex.items-end button,
-    #salidaRegistroForm .flex.items-end button { /* Asegurar que botones de salida también se ajusten */
+    #registerForm .flex.items-end button {
         padding: 0.6rem 0.8rem;
         font-size: 0.9rem;
     }
-    #newRegisterForm h2, #salidaForm h2 {
+    #newRegisterForm h2 {
         font-size: 1.5rem;
     }
-    .edit-btn, .salida-btn, .delete-btn {
+    .edit-btn, .delete-btn, .verify-btn { /* Incluir .verify-btn aquí */
         padding: 0.4rem 0.6rem;
         font-size: 0.75rem;
     }

@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const config = {
         itemsPerPage: 10,
         defaultPage: 1,
-        // URL base de tu API de vehículos
         apiBaseUrl: 'http://localhost:3000/api/vehiculos' // URL de la API para vehículos
     };
 
@@ -39,12 +38,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!await checkAuthentication()) {
             return; // Redirige si no está autenticado
         }
-        loadUser();
-        setupEventListeners();
+        loadUser(); // Carga el nombre de usuario en la UI (ahora en mayúsculas)
+        setupEventListeners(); // Configura todos los oyentes de eventos
         await fetchAndRenderTable(); // Cargar datos desde el backend al inicio
     }
 
-    // --- 1. Protección de la Ruta ---
+    // --- Protección de la Ruta (Verificación de Token) ---
     async function checkAuthentication() {
         const token = localStorage.getItem('token');
         if (!token) {
@@ -55,8 +54,26 @@ document.addEventListener('DOMContentLoaded', function() {
         return true;
     }
 
+    // Función auxiliar para obtener las cabeceras con el token
+    const getAuthHeaders = () => {
+        const token = localStorage.getItem('token');
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        return headers;
+    };
+
+    // --- CAMBIO AQUÍ: Nombre de usuario en mayúsculas ---
     function loadUser() {
-        elements.userDisplay.textContent = localStorage.getItem('username') || 'Usuario'; // Obtener del localStorage
+        const storedUsername = localStorage.getItem('username');
+        if (storedUsername) {
+            elements.userDisplay.textContent = storedUsername.toUpperCase(); // Convertir a mayúsculas
+        } else {
+            elements.userDisplay.textContent = 'INVITADO';
+        }
     }
 
     function setupEventListeners() {
@@ -68,15 +85,25 @@ document.addEventListener('DOMContentLoaded', function() {
         elements.prevPageBtn.addEventListener('click', goToPrevPage);
         elements.nextPageBtn.addEventListener('click', goToNextPage);
         elements.tableBody.addEventListener('click', handleTableClick); // Para botones de editar/salida/eliminar
-        elements.salidaRegistroForm.addEventListener('submit', handleSalidaSubmit); // Listener para el formulario de salida
-        elements.cancelSalidaBtn.addEventListener('click', hideSalidaForm); // Listener para cancelar salida
+
+        // Asegúrate de que los elementos de salida existan antes de añadir listeners
+        if (elements.salidaRegistroForm) {
+            elements.salidaRegistroForm.addEventListener('submit', handleSalidaSubmit); // Listener para el formulario de salida
+        }
+        if (elements.cancelSalidaBtn) {
+            elements.cancelSalidaBtn.addEventListener('click', hideSalidaForm); // Listener para cancelar salida
+        }
     }
 
     // --- Funciones de Formulario de Registro/Edición de Vehículo ---
     function showRegisterForm() {
         elements.newRegisterForm.classList.remove('hidden');
-        elements.salidaForm.classList.add('hidden'); // Asegurarse de ocultar el formulario de salida
+        // Asegurarse de ocultar el formulario de salida si está visible
+        if (elements.salidaForm) {
+            elements.salidaForm.classList.add('hidden');
+        }
         elements.registerForm.reset(); // Limpiar formulario
+
         if (state.editMode && state.editItemId) {
             loadEditData(); // Cargar datos si estamos en modo edición
         } else {
@@ -106,7 +133,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const formData = new FormData(elements.registerForm);
-        // Crear un objeto con los datos del formulario de vehículo
         const vehiculoData = {
             fechaRegistro: formData.get('fechaRegistro'),
             conductor: formData.get('conductor').toUpperCase(),
@@ -121,48 +147,55 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             let response;
+            const headers = getAuthHeaders(); // Obtener cabeceras con token
+
             if (state.editMode) {
-                // Modo edición: enviar PUT/PATCH al backend con el ID
                 response = await fetch(`${config.apiBaseUrl}/${state.editItemId}`, {
-                    method: 'PUT', // o 'PATCH'
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
+                    method: 'PUT',
+                    headers: headers,
                     body: JSON.stringify(vehiculoData)
                 });
             } else {
-                // Nuevo registro: enviar POST al backend
                 response = await fetch(config.apiBaseUrl, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
+                    headers: headers,
                     body: JSON.stringify(vehiculoData)
                 });
             }
 
-            const result = await response.json();
-
-            if (response.ok) {
-                alert(`Registro de vehículo ${state.editMode ? 'modificado' : 'guardado'} exitosamente.`);
-                hideRegisterForm(); // Ocultar formulario y resetear estado
-                await fetchAndRenderTable(); // Recargar y renderizar la tabla con los datos actualizados
-            } else {
-                alert(`Error al ${state.editMode ? 'modificar' : 'guardar'} el registro de vehículo: ${result.message || 'Error desconocido'}`);
+            // --- Manejo de errores mejorado ---
+            if (!response.ok) {
+                const errorText = await response.text(); // Lee el cuerpo una sola vez como texto
+                let errorMessage = `Error al ${state.editMode ? 'modificar' : 'guardar'} el registro de vehículo: HTTP status ${response.status}`;
+                try {
+                    const errorData = JSON.parse(errorText); // Intenta parsear como JSON
+                    errorMessage = errorData.message || errorMessage;
+                } catch (jsonParseError) {
+                    errorMessage = `Error inesperado del servidor: ${errorText.substring(0, 100)}... (no es JSON válido)`;
+                }
+                throw new Error(errorMessage);
             }
+
+            const result = await response.json(); // Solo parsear si response.ok
+
+            alert(`Registro de vehículo ${state.editMode ? 'modificado' : 'guardado'} exitosamente.`);
+            hideRegisterForm(); // Ocultar formulario y resetear estado
+            await fetchAndRenderTable(); // Recargar y renderizar la tabla con los datos actualizados
         } catch (error) {
             console.error('Error en la solicitud al backend:', error);
-            alert('Error de conexión con el servidor. Inténtelo de nuevo.');
+            alert(`Error de conexión con el servidor o al procesar la respuesta: ${error.message}`);
         }
     }
 
     // --- Funciones de Formulario de Salida de Vehículo ---
     function showSalidaForm(itemId) {
         elements.newRegisterForm.classList.add('hidden'); // Ocultar formulario de registro
-        elements.salidaForm.classList.remove('hidden');
-        elements.salidaRegistroForm.reset(); // Limpiar formulario de salida
+        if (elements.salidaForm) { // Asegurarse de que el elemento exista
+            elements.salidaForm.classList.remove('hidden');
+        }
+        if (elements.salidaRegistroForm) { // Asegurarse de que el elemento exista
+            elements.salidaRegistroForm.reset(); // Limpiar formulario de salida
+        }
         state.vehiculoSalidaId = itemId; // Almacenar el ID del vehículo para la salida
 
         // Autocompletar fecha y hora actuales
@@ -172,21 +205,31 @@ document.addEventListener('DOMContentLoaded', function() {
         const day = now.getDate().toString().padStart(2, '0');
         const hours = now.getHours().toString().padStart(2, '0');
         const minutes = now.getMinutes().toString().padStart(2, '0');
-        elements.salidaRegistroForm.fecha_salida.value = `${year}-${month}-${day}`;
-        elements.salidaRegistroForm.hora_salida.value = `${hours}:${minutes}`;
+
+        // Asumiendo que fecha_salida es un input type="date" y hora_salida es input type="time"
+        if (elements.salidaRegistroForm.fecha_salida) {
+            elements.salidaRegistroForm.fecha_salida.value = `${year}-${month}-${day}`;
+        }
+        if (elements.salidaRegistroForm.hora_salida) {
+            elements.salidaRegistroForm.hora_salida.value = `${hours}:${minutes}`;
+        }
     }
 
     function hideSalidaForm() {
-        elements.salidaForm.classList.add('hidden');
+        if (elements.salidaForm) { // Asegurarse de que el elemento exista
+            elements.salidaForm.classList.add('hidden');
+        }
         state.vehiculoSalidaId = null; // Limpiar ID del vehículo de salida
-        elements.salidaRegistroForm.reset(); // Resetear el formulario de salida
+        if (elements.salidaRegistroForm) { // Asegurarse de que el elemento exista
+            elements.salidaRegistroForm.reset(); // Resetear el formulario de salida
+        }
     }
 
     async function handleSalidaSubmit(e) {
         e.preventDefault();
         const token = localStorage.getItem('token');
         if (!token) {
-            alert('No está autenticado. Por favor, inicia sesión.');
+            alert('No está autenticado. Por favor, inicie sesión.');
             window.location.href = '../login.html';
             return;
         }
@@ -194,31 +237,41 @@ document.addEventListener('DOMContentLoaded', function() {
         const fechaSalida = elements.salidaRegistroForm.fecha_salida.value;
         const horaSalida = elements.salidaRegistroForm.hora_salida.value;
 
-        // Combina fecha y hora para enviarlo al backend como un solo string
-        const fechaHoraSalida = `${fechaSalida} ${horaSalida}`;
+        if (!fechaSalida || !horaSalida) {
+            alert('La fecha y hora de salida son obligatorias.');
+            return;
+        }
 
         try {
+            const headers = getAuthHeaders(); // Obtener cabeceras con token
             const response = await fetch(`${config.apiBaseUrl}/${state.vehiculoSalidaId}/salida`, { // Nueva ruta para actualizar salida
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ fecha_salida: fechaHoraSalida }) // Enviamos el campo fecha_salida
+                headers: headers,
+                // --- CAMBIO CLAVE AQUÍ: Enviar fecha_salida y hora_salida por separado ---
+                body: JSON.stringify({ fecha_salida: fechaSalida, hora_salida: horaSalida })
             });
 
-            const result = await response.json();
-
-            if (response.ok) {
-                alert('Fecha y hora de salida registradas exitosamente.');
-                hideSalidaForm(); // Ocultar formulario de salida
-                await fetchAndRenderTable(); // Recargar la tabla
-            } else {
-                alert(`Error al registrar salida: ${result.message || 'Error desconocido'}`);
+            // --- Manejo de errores mejorado ---
+            if (!response.ok) {
+                const errorText = await response.text();
+                let errorMessage = `Error al registrar salida: HTTP status ${response.status}`;
+                try {
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = errorData.message || errorMessage;
+                } catch (jsonParseError) {
+                    errorMessage = `Error inesperado del servidor: ${errorText.substring(0, 100)}... (no es JSON válido)`;
+                }
+                throw new Error(errorMessage);
             }
+
+            const result = await response.json(); // Solo parsear si response.ok
+
+            alert('Fecha y hora de salida registradas exitosamente.');
+            hideSalidaForm(); // Ocultar formulario de salida
+            await fetchAndRenderTable(); // Recargar la tabla
         } catch (error) {
             console.error('Error al registrar salida:', error);
-            alert('Error de conexión con el servidor al registrar salida.');
+            alert(`Error de conexión con el servidor o al procesar la respuesta: ${error.message}`);
         }
     }
 
@@ -228,30 +281,46 @@ document.addEventListener('DOMContentLoaded', function() {
         const token = localStorage.getItem('token');
         if (!token) {
             console.error('No token found. Cannot fetch data.');
+            elements.tableBody.innerHTML = `<tr><td colspan="13" class="px-6 py-4 text-center text-gray-400">No autenticado. Por favor, inicie sesión.</td></tr>`;
             return;
         }
         try {
+            const headers = getAuthHeaders(); // Obtener cabeceras con token
             const response = await fetch(config.apiBaseUrl, {
                 method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                headers: headers
             });
-            const data = await response.json();
 
-            if (response.ok) {
-                state.vehiculosData = data; // Guardar los datos recibidos del backend
-                state.filteredData = null; // Resetear filtro
-                state.currentPage = config.defaultPage; // Volver a la primera página
-                renderTable(); // Renderizar la tabla con los nuevos datos
-            } else {
-                alert(`Error al cargar los registros: ${data.message || 'Error desconocido'}`);
+            // --- Manejo de errores mejorado ---
+            if (!response.ok) {
+                const errorText = await response.text();
+                let errorMessage = `Error al cargar los registros: HTTP status ${response.status}`;
+                try {
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = errorData.message || errorMessage;
+                } catch (jsonParseError) {
+                    errorMessage = `Error inesperado del servidor: ${errorText.substring(0, 100)}... (no es JSON válido)`;
+                }
+                alert(errorMessage);
                 state.vehiculosData = []; // Vaciar datos si hay error
                 renderTable(); // Renderizar tabla vacía
+                return; // Detener la ejecución
             }
+
+            const data = await response.json();
+
+            // *** IMPORTANTE: Ajusta esto según la respuesta REAL de tu API de vehículos ***
+            // Si tu backend devuelve { vehiculos: [...] }, usa data.vehiculos
+            // Si tu backend devuelve directamente [...], usa data
+            state.vehiculosData = data.vehiculos || data; // Asume que la respuesta es { vehiculos: [...] } o un array directo
+
+            state.filteredData = null; // Resetear filtro
+            state.currentPage = config.defaultPage; // Volver a la primera página
+            renderTable(); // Renderizar la tabla con los nuevos datos
+
         } catch (error) {
             console.error('Error al cargar los datos de vehículos:', error);
-            alert('No se pudo conectar con el servidor para cargar los vehículos.');
+            alert(`No se pudo conectar con el servidor para cargar los vehículos: ${error.message}`);
             state.vehiculosData = []; // Vaciar datos si hay error de red
             renderTable(); // Renderizar tabla vacía
         }
@@ -278,6 +347,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let message = isTotalEmpty
             ? 'No hay registros disponibles. Agregue un nuevo registro.'
             : 'No se encontraron resultados para su búsqueda.';
+        // Asegúrate de que el colspan sea el número correcto de columnas en tu tabla HTML de vehículos
         elements.tableBody.innerHTML = `
             <tr>
                 <td colspan="13" class="px-6 py-4 text-center text-gray-400">
@@ -289,19 +359,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function renderTableRows(data) {
         data.forEach((vehiculo, index) => {
-            // Usar vehiculo._id como identificador único para las acciones
+            // Formatear fechas y horas para visualización
+            const formattedFechaRegistro = vehiculo.fechaRegistro ? new Date(vehiculo.fechaRegistro).toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '-';
+            const formattedHoraEntrada = vehiculo.hora_entrada || '-';
+
+            // Si fecha_salida es un Date object del backend, formatéalo. Si es string, úsalo.
+            const formattedFechaSalida = vehiculo.fecha_salida ? new Date(vehiculo.fecha_salida).toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '-';
+            const formattedHoraSalida = vehiculo.hora_salida || '-';
+
+
             const row = document.createElement('tr');
             row.className = 'hover:bg-white hover:bg-opacity-10';
             row.innerHTML = `
                 <td class="px-4 py-3 text-center">${index + 1 + ((state.currentPage - 1) * config.itemsPerPage)}</td>
-                <td class="px-4 py-3 text-center">${vehiculo.fechaRegistro || '-'}</td>
+                <td class="px-4 py-3 text-center">${formattedFechaRegistro}</td>
                 <td class="px-4 py-3">${vehiculo.conductor || '-'}</td>
                 <td class="px-4 py-3">${vehiculo.empresa || '-'}</td>
                 <td class="px-4 py-3 text-center">${vehiculo.placa || '-'}</td>
                 <td class="px-4 py-3 text-center">${vehiculo.tipo_vehiculo || '-'}</td>
-                <td class="px-4 py-3 text-center">${vehiculo.hora_entrada || '-'}</td>
-                <td class="px-4 py-3 text-center">${vehiculo.hora_salida || '-'}</td>
-                <td class="px-4 py-3 text-center">${vehiculo.fecha_salida ? vehiculo.fecha_salida.split(' ')[0] : '-'}</td>
+                <td class="px-4 py-3 text-center">${formattedHoraEntrada}</td>
+                <td class="px-4 py-3 text-center">${formattedHoraSalida}</td>
+                <td class="px-4 py-3 text-center">${formattedFechaSalida}</td>
                 <td class="px-4 py-3 text-center">${vehiculo.parqueadero_interno || '-'}</td>
                 <td class="px-4 py-3 text-center">${vehiculo.parqueadero_visitantes || '-'}</td>
                 <td class="px-4 py-3">${vehiculo.observaciones || '-'}</td>
@@ -360,16 +438,20 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Crear una copia de los datos para no modificar los originales
-        const exportableData = dataToExport.map(item => ({ ...item }));
+        const exportableData = dataToExport.map(item => {
+            const newItem = { ...item };
+            delete newItem._id;
+            delete newItem.__v;
 
-        // Eliminar el campo '_id' de cada objeto antes de exportar
-        exportableData.forEach(item => {
-            delete item._id;
-            delete item.__v; // Eliminar también la versión de Mongoose si no es necesaria
+            // Formatear fechas y horas para Excel
+            newItem.fechaRegistro = newItem.fechaRegistro ? new Date(newItem.fechaRegistro).toLocaleDateString('es-ES') : '';
+            newItem.hora_entrada = newItem.hora_entrada || '';
+            newItem.fecha_salida = newItem.fecha_salida ? new Date(newItem.fecha_salida).toLocaleDateString('es-ES') : '';
+            newItem.hora_salida = newItem.hora_salida || '';
+
+            return newItem;
         });
 
-        // Asegurarse de que el orden de las cabeceras sea el deseado
         // Define el orden manual de las columnas para el Excel de vehículos
         const headers = [
             'fechaRegistro', 'conductor', 'empresa', 'placa', 'tipo_vehiculo',
@@ -377,7 +459,6 @@ document.addEventListener('DOMContentLoaded', function() {
             'parqueadero_visitantes', 'observaciones'
         ];
 
-        // Mapear los datos al orden de las cabeceras
         const data = exportableData.map(vehiculo =>
             headers.map(header => vehiculo[header] || '-')
         );
@@ -392,8 +473,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- Funciones de Acción en la Tabla (Editar, Salida, Eliminar) ---
     async function handleTableClick(e) {
-        const itemId = e.target.dataset.id; // Usamos data-id que ahora viene del backend (_id)
-        if (!itemId) return; // Si no tiene data-id, no es un botón de acción
+        const itemId = e.target.dataset.id;
+        if (!itemId) return;
 
         if (e.target.classList.contains('edit-btn')) {
             handleEdit(itemId);
@@ -406,8 +487,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function handleEdit(itemId) {
         state.editMode = true;
-        state.editItemId = itemId; // Almacenar el ID del backend
-        showRegisterForm(); // Mostrar el formulario para edición
+        state.editItemId = itemId;
+        showRegisterForm();
     }
 
     async function handleDelete(itemId) {
@@ -423,29 +504,35 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         try {
+            const headers = getAuthHeaders();
             const response = await fetch(`${config.apiBaseUrl}/${itemId}`, {
                 method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                headers: headers
             });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                let errorMessage = `Error al eliminar registro de vehículo: HTTP status ${response.status}`;
+                try {
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = errorData.message || errorMessage;
+                } catch (jsonParseError) {
+                    errorMessage = `Error inesperado del servidor: ${errorText.substring(0, 100)}... (no es JSON válido)`;
+                }
+                throw new Error(errorMessage);
+            }
 
             const result = await response.json();
 
-            if (response.ok) {
-                alert('Registro de vehículo eliminado exitosamente.');
-                await fetchAndRenderTable(); // Recargar la tabla
-            } else {
-                alert(`Error al eliminar registro de vehículo: ${result.message || 'Error desconocido'}`);
-            }
+            alert('Registro de vehículo eliminado exitosamente.');
+            await fetchAndRenderTable();
         } catch (error) {
             console.error('Error al eliminar registro de vehículo:', error);
-            alert('Error de conexión con el servidor al eliminar registro.');
+            alert(`Error de conexión con el servidor o al eliminar registro: ${error.message}`);
         }
     }
 
     function loadEditData() {
-        // En modo edición, buscar el vehículo en los datos actuales por su _id del backend
         const vehiculo = state.vehiculosData.find(p => p._id === state.editItemId);
         if (vehiculo) {
             // Rellenar el formulario con los datos del vehículo

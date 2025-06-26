@@ -2,13 +2,17 @@
 const express = require('express');
 const router = express.Router();
 const vehiculoController = require('../controllers/vehiculoController');
-const authMiddleware = require('../middleware/authMiddleware'); // Asumiendo que usas el mismo middleware de auth
+
+// *********************************************************************************
+// CAMBIO CLAVE AQUÍ: Desestructurar 'protect' del módulo authMiddleware
+// *********************************************************************************
+const { protect } = require('../middleware/authMiddleware'); // <--- ¡CAMBIO APLICADO AQUÍ!
 
 // Rutas para las operaciones CRUD de vehículos, protegidas por autenticación
-router.get('/', authMiddleware, vehiculoController.getVehiculos);
-router.post('/', authMiddleware, vehiculoController.createVehiculo);
-router.put('/:id', authMiddleware, vehiculoController.updateVehiculo); // Para actualizar cualquier campo
-router.put('/:id/salida', authMiddleware, vehiculoController.registrarSalidaVehiculo); // Ruta específica para registrar salida
-router.delete('/:id', authMiddleware, vehiculoController.deleteVehiculo);
+router.get('/', protect, vehiculoController.getVehiculos); // Usar 'protect'
+router.post('/', protect, vehiculoController.createVehiculo); // Usar 'protect'
+router.put('/:id', protect, vehiculoController.updateVehiculo); // Usar 'protect'
+router.put('/:id/salida', protect, vehiculoController.registrarSalidaVehiculo); // Usar 'protect'
+router.delete('/:id', protect, vehiculoController.deleteVehiculo); // Usar 'protect'
 
 module.exports = router;

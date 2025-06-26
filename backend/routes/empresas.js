@@ -1,13 +1,25 @@
+// SIS-FP/backend/routes/empresas.js
 const express = require('express');
 const router = express.Router();
-const empresaController = require('../controllers/empresaController'); // Ruta correcta para ir de 'routes' a 'controllers'
-const authMiddleware = require('../middleware/authMiddleware'); // Ruta correcta para ir de 'routes' a 'middleware'
+const { protect } = require('../middleware/authMiddleware');
+const {
+    getEmpresas,
+    createEmpresa,
+    updateEmpresa,
+    deleteEmpresa,
+    updateSalida
+} = require('../controllers/empresaController');
 
-// Rutas para las operaciones CRUD de empresas, protegidas por autenticación
-router.get('/', authMiddleware, empresaController.getEmpresas);
-router.post('/', authMiddleware, empresaController.createEmpresa);
-router.put('/:id', authMiddleware, empresaController.updateEmpresa);
-router.put('/:id/salida', authMiddleware, empresaController.updateFechaSalida); // Ruta específica para actualizar salida
-router.delete('/:id', authMiddleware, empresaController.deleteEmpresa);
+// Rutas para la gestión de Empresas
+router.route('/')
+    .get(protect, getEmpresas)
+    .post(protect, createEmpresa);
+
+router.route('/:id')
+    .put(protect, updateEmpresa)
+    .delete(protect, deleteEmpresa);
+
+// Nueva ruta para registrar la salida de una empresa
+router.put('/:id/salida', protect, updateSalida);
 
 module.exports = router;

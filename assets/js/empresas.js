@@ -1,19 +1,31 @@
 // assets/js/empresas.js
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
+    // --- Initial User Display Setup ---
+    const userDisplayElement = document.getElementById('userDisplay');
+    const storedUsername = localStorage.getItem('username');
+
+    if (userDisplayElement) {
+        if (storedUsername) {
+            userDisplayElement.textContent = storedUsername.toUpperCase(); // Usuario en MAYÚSCULAS
+        } else {
+            userDisplayElement.textContent = 'INVITADO';
+        }
+    }
+
+    // --- CONFIGURACIÓN DE LA APLICACIÓN ---
     const config = {
+        apiBaseUrl: 'http://localhost:3000/api/empresas',
         itemsPerPage: 10,
-        defaultPage: 1,
-        // URL base de tu API de backend
-        apiBaseUrl: 'http://localhost:3000/api/empresas' // Nueva URL para la API de empresas
+        defaultPage: 1
     };
 
     const state = {
-        empresasData: [], // Ahora esto se llenará desde el backend
-        currentItemId: null, // Para manejar IDs de la DB, no un contador local
+        empresasData: [],
         currentPage: config.defaultPage,
         filteredData: null,
         editMode: false,
-        editItemId: null // Almacena el ID de la empresa a editar (del backend)
+        editItemId: null,
+        empresaSalidaId: null // Almacena el ID de la empresa para el registro de salida
     };
 
     const elements = {
@@ -28,35 +40,44 @@ document.addEventListener('DOMContentLoaded', function() {
         currentPageSpan: document.getElementById('currentPage'),
         prevPageBtn: document.getElementById('prevPageBtn'),
         nextPageBtn: document.getElementById('nextPageBtn'),
-        userDisplay: document.getElementById('userDisplay')
+        userDisplay: document.getElementById('userDisplay'),
+        // Elementos del modal de salida
+        salidaForm: document.getElementById('salidaForm'),
+        salidaRegistroForm: document.getElementById('salidaRegistroForm'),
+        cancelSalidaBtn: document.getElementById('cancelSalidaBtn')
     };
 
     // --- Funciones de Inicialización ---
     async function init() {
         if (!await checkAuthentication()) {
-            return; // Redirige si no está autenticado
+            return;
         }
-        loadUser();
         setupEventListeners();
-        await fetchAndRenderTable(); // Cargar datos desde el backend al inicio
+        await fetchAndRenderTable();
     }
 
-    // --- 1. Protección de la Ruta ---
+    // --- Protección de la Ruta (Verificación de Token) ---
     async function checkAuthentication() {
         const token = localStorage.getItem('token');
         if (!token) {
             alert('No estás autenticado. Por favor, inicia sesión.');
-            window.location.href = '../login.html'; // Ajusta la ruta si es necesario
+            window.location.href = '../login.html';
             return false;
         }
-        // Opcional: Podrías hacer una validación más profunda del token aquí
-        // haciendo una petición a una ruta protegida simple para asegurar que el token es válido.
         return true;
     }
 
-    function loadUser() {
-        elements.userDisplay.textContent = localStorage.getItem('username') || 'Usuario'; // Obtener del localStorage
-    }
+    // Función auxiliar para obtener las cabeceras con el token
+    const getAuthHeaders = () => {
+        const token = localStorage.getItem('token');
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        return headers;
+    };
 
     function setupEventListeners() {
         elements.newRegisterBtn.addEventListener('click', showRegisterForm);
@@ -66,33 +87,47 @@ document.addEventListener('DOMContentLoaded', function() {
         elements.exportBtn.addEventListener('click', exportToExcel);
         elements.prevPageBtn.addEventListener('click', goToPrevPage);
         elements.nextPageBtn.addEventListener('click', goToNextPage);
-        elements.tableBody.addEventListener('click', handleTableClick); // Para botones de editar/salida
+        elements.tableBody.addEventListener('click', handleTableClick);
+
+        // Listeners para el formulario de salida
+        if (elements.salidaRegistroForm) {
+            elements.salidaRegistroForm.addEventListener('submit', handleSalidaSubmit);
+        }
+        if (elements.cancelSalidaBtn) {
+            elements.cancelSalidaBtn.addEventListener('click', hideSalidaForm);
+        }
     }
 
-    // --- Funciones de Formulario ---
+    // --- Funciones de Formulario de Registro/Edición de Empresa ---
     function showRegisterForm() {
         elements.newRegisterForm.classList.remove('hidden');
+        // Asegurarse de ocultar el formulario de salida si está visible
+        if (elements.salidaForm) {
+            elements.salidaForm.classList.add('hidden');
+        }
         elements.registerForm.reset(); // Limpiar formulario
+
         if (state.editMode && state.editItemId) {
             loadEditData(); // Cargar datos si estamos en modo edición
         } else {
-            // Asegurarse de que el campo de fecha_entrada tenga la fecha/hora actual por defecto
-            // Esto es útil para nuevos registros
+            // Establecer fecha y hora actual por defecto para la entrada
             const now = new Date();
             const year = now.getFullYear();
             const month = (now.getMonth() + 1).toString().padStart(2, '0');
             const day = now.getDate().toString().padStart(2, '0');
             const hours = now.getHours().toString().padStart(2, '0');
             const minutes = now.getMinutes().toString().padStart(2, '0');
-            elements.registerForm.fecha_entrada.value = `${year}-${month}-${day} ${hours}:${minutes}`;
+
+            elements.registerForm.fecha_entrada.value = `${year}-${month}-${day}`;
+            elements.registerForm.hora_entrada.value = `${hours}:${minutes}`;
         }
     }
 
     function hideRegisterForm() {
         elements.newRegisterForm.classList.add('hidden');
         state.editMode = false;
-        state.editItemId = null; // Limpiar ID del item en edición
-        elements.registerForm.reset(); // Resetear el formulario
+        state.editItemId = null;
+        elements.registerForm.reset();
     }
 
     async function handleFormSubmit(e) {
@@ -105,17 +140,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const formData = new FormData(elements.registerForm);
-        // Crear un objeto con los datos del formulario
         const empresaData = {
             fecha_entrada: formData.get('fecha_entrada'),
-            // fecha_salida se manejará por separado en el backend o en la acción de "Salida"
+            hora_entrada: formData.get('hora_entrada'),
             nombre_empresa: formData.get('nombre_empresa').toUpperCase(),
             identificacion: formData.get('identificacion').toUpperCase(),
             area_ingreso: formData.get('area_ingreso').toUpperCase(),
             empresa: formData.get('empresa').toUpperCase(),
             carne: formData.get('carne').toUpperCase() || '-',
             tipo_empresa: formData.get('tipo_empresa').toUpperCase(),
-            area: formData.get('area').toUpperCase() || '-',
+            // CAMBIO AQUÍ: 'area' eliminado de los datos enviados
             dependencia: formData.get('dependencia').toUpperCase() || '-',
             dispositivo: formData.get('dispositivo').toUpperCase() || '-',
             codigo_dispositivo: formData.get('codigo_dispositivo').toUpperCase() || '-',
@@ -124,74 +158,175 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             let response;
+            const headers = getAuthHeaders();
+
             if (state.editMode) {
-                // Modo edición: enviar PUT/PATCH al backend con el ID
                 response = await fetch(`${config.apiBaseUrl}/${state.editItemId}`, {
-                    method: 'PUT', // o 'PATCH'
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
+                    method: 'PUT',
+                    headers: headers,
                     body: JSON.stringify(empresaData)
                 });
             } else {
-                // Nuevo registro: enviar POST al backend
                 response = await fetch(config.apiBaseUrl, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
+                    headers: headers,
                     body: JSON.stringify(empresaData)
                 });
+            }
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                let errorMessage = `Error al ${state.editMode ? 'modificar' : 'guardar'} el registro: HTTP status ${response.status}`;
+                try {
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = errorData.message || errorMessage;
+                } catch (jsonParseError) {
+                    errorMessage = `Error inesperado del servidor: ${errorText.substring(0, 100)}... (no es JSON válido)`;
+                }
+                throw new Error(errorMessage);
             }
 
             const result = await response.json();
 
-            if (response.ok) {
-                alert(`Registro ${state.editMode ? 'modificado' : 'guardado'} exitosamente.`);
-                hideRegisterForm(); // Ocultar formulario y resetear estado
-                await fetchAndRenderTable(); // Recargar y renderizar la tabla con los datos actualizados
-            } else {
-                alert(`Error al ${state.editMode ? 'modificar' : 'guardar'} el registro: ${result.message || 'Error desconocido'}`);
-            }
+            alert(`Registro ${state.editMode ? 'modificado' : 'guardado'} exitosamente.`);
+            hideRegisterForm();
+            await fetchAndRenderTable();
         } catch (error) {
             console.error('Error en la solicitud al backend:', error);
-            alert('Error de conexión con el servidor. Inténtelo de nuevo.');
+            alert(`Error de conexión con el servidor o al procesar la respuesta: ${error.message}`);
         }
     }
+
+    // --- Funciones de Formulario de Salida de Empresa ---
+    function showSalidaForm(itemId) {
+        elements.newRegisterForm.classList.add('hidden'); // Ocultar formulario de registro
+        if (elements.salidaForm) {
+            elements.salidaForm.classList.remove('hidden');
+        }
+        if (elements.salidaRegistroForm) {
+            elements.salidaRegistroForm.reset();
+        }
+        state.empresaSalidaId = itemId; // Almacenar el ID de la empresa para la salida
+
+        // Autocompletar fecha y hora actuales
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = (now.getMonth() + 1).toString().padStart(2, '0');
+        const day = now.getDate().toString().padStart(2, '0');
+        const hours = now.getHours().toString().padStart(2, '0');
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+
+        if (elements.salidaRegistroForm.fecha_salida) {
+            elements.salidaRegistroForm.fecha_salida.value = `${year}-${month}-${day}`;
+        }
+        if (elements.salidaRegistroForm.hora_salida) {
+            elements.salidaRegistroForm.hora_salida.value = `${hours}:${minutes}`;
+        }
+    }
+
+    function hideSalidaForm() {
+        if (elements.salidaForm) {
+            elements.salidaForm.classList.add('hidden');
+        }
+        state.empresaSalidaId = null;
+        if (elements.salidaRegistroForm) {
+            elements.salidaRegistroForm.reset();
+        }
+    }
+
+    async function handleSalidaSubmit(e) {
+        e.preventDefault();
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('No está autenticado. Por favor, inicie sesión.');
+            window.location.href = '../login.html';
+            return;
+        }
+
+        const fechaSalida = elements.salidaRegistroForm.fecha_salida.value;
+        const horaSalida = elements.salidaRegistroForm.hora_salida.value;
+
+        if (!fechaSalida || !horaSalida) {
+            alert('La fecha y hora de salida son obligatorias.');
+            return;
+        }
+
+        try {
+            const headers = getAuthHeaders();
+            const response = await fetch(`${config.apiBaseUrl}/${state.empresaSalidaId}/salida`, {
+                method: 'PUT',
+                headers: headers,
+                body: JSON.stringify({ fecha_salida: fechaSalida, hora_salida: horaSalida }) // Enviar fecha y hora separadas
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                let errorMessage = `Error al registrar salida: HTTP status ${response.status}`;
+                try {
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = errorData.message || errorMessage;
+                } catch (jsonParseError) {
+                    errorMessage = `Error inesperado del servidor: ${errorText.substring(0, 100)}... (no es JSON válido)`;
+                }
+                throw new Error(errorMessage);
+            }
+
+            const result = await response.json();
+
+            alert('Fecha y hora de salida registradas exitosamente.');
+            hideSalidaForm();
+            await fetchAndRenderTable();
+        } catch (error) {
+            console.error('Error al registrar salida:', error);
+            alert(`Error de conexión con el servidor o al procesar la respuesta: ${error.message}`);
+        }
+    }
+
 
     // --- Funciones de Tabla y Datos ---
     async function fetchAndRenderTable() {
         const token = localStorage.getItem('token');
         if (!token) {
             console.error('No token found. Cannot fetch data.');
+            // CAMBIO AQUÍ: Colspan ajustado a 16 (antes 17)
+            elements.tableBody.innerHTML = `<tr><td colspan="16" class="px-6 py-4 text-center text-gray-400">No autenticado. Por favor, inicie sesión.</td></tr>`;
             return;
         }
         try {
+            const headers = getAuthHeaders();
             const response = await fetch(config.apiBaseUrl, {
                 method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                headers: headers
             });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                let errorMessage = `Error al cargar los registros: HTTP status ${response.status}`;
+                try {
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = errorData.message || errorMessage;
+                } catch (jsonParseError) {
+                    errorMessage = `Error inesperado del servidor: ${errorText.substring(0, 100)}... (no es JSON válido)`;
+                }
+                alert(errorMessage);
+                state.empresasData = [];
+                renderTable();
+                return;
+            }
+
             const data = await response.json();
 
-            if (response.ok) {
-                state.empresasData = data; // Guardar los datos recibidos del backend
-                state.filteredData = null; // Resetear filtro
-                state.currentPage = config.defaultPage; // Volver a la primera página
-                renderTable(); // Renderizar la tabla con los nuevos datos
-            } else {
-                alert(`Error al cargar los registros: ${data.message || 'Error desconocido'}`);
-                state.empresasData = []; // Vaciar datos si hay error
-                renderTable(); // Renderizar tabla vacía
-            }
+            state.empresasData = data.empresas || data;
+
+            state.filteredData = null;
+            state.currentPage = config.defaultPage;
+            renderTable();
+
         } catch (error) {
             console.error('Error al cargar los datos de empresas:', error);
-            alert('No se pudo conectar con el servidor para cargar las empresas.');
-            state.empresasData = []; // Vaciar datos si hay error de red
-            renderTable(); // Renderizar tabla vacía
+            alert(`No se pudo conectar con el servidor para cargar las empresas: ${error.message}`);
+            state.empresasData = [];
+            renderTable();
         }
     }
 
@@ -216,9 +351,10 @@ document.addEventListener('DOMContentLoaded', function() {
         let message = isTotalEmpty
             ? 'No hay registros disponibles. Agregue un nuevo registro.'
             : 'No se encontraron resultados para su búsqueda.';
+        // CAMBIO AQUÍ: Colspan ajustado a 16 (antes 17)
         elements.tableBody.innerHTML = `
             <tr>
-                <td colspan="15" class="px-6 py-4 text-center text-gray-400">
+                <td colspan="16" class="px-6 py-4 text-center text-gray-400">
                     ${message}
                 </td>
             </tr>
@@ -227,20 +363,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function renderTableRows(data) {
         data.forEach((empresa, index) => {
-            // Usar empresa._id como identificador único para las acciones
+            // Formatear fechas y horas para visualización
+            const formattedFechaEntrada = empresa.fecha_entrada ? new Date(empresa.fecha_entrada).toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '-';
+            const formattedHoraEntrada = empresa.hora_entrada || '-';
+
+            const formattedFechaSalida = empresa.fecha_salida ? new Date(empresa.fecha_salida).toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '-';
+            const formattedHoraSalida = empresa.hora_salida || '-';
+
             const row = document.createElement('tr');
             row.className = 'hover:bg-white hover:bg-opacity-10';
             row.innerHTML = `
                 <td class="px-4 py-3 text-center">${index + 1 + ((state.currentPage - 1) * config.itemsPerPage)}</td>
-                <td class="px-4 py-3 text-center">${empresa.fecha_entrada || '-'}</td>
-                <td class="px-4 py-3 text-center">${empresa.fecha_salida || '-'}</td>
+                <td class="px-4 py-3 text-center">${formattedFechaEntrada}</td>
+                <td class="px-4 py-3 text-center">${formattedHoraEntrada}</td>
+                <td class="px-4 py-3 text-center">${formattedFechaSalida}</td>
+                <td class="px-4 py-3 text-center">${formattedHoraSalida}</td>
                 <td class="px-4 py-3">${empresa.nombre_empresa || '-'}</td>
                 <td class="px-4 py-3 text-center">${empresa.identificacion || '-'}</td>
                 <td class="px-4 py-3 text-center">${empresa.area_ingreso || '-'}</td>
                 <td class="px-4 py-3">${empresa.empresa || '-'}</td>
                 <td class="px-4 py-3 text-center">${empresa.carne || '-'}</td>
                 <td class="px-4 py-3 text-center">${empresa.tipo_empresa || '-'}</td>
-                <td class="px-4 py-3">${empresa.area || '-'}</td>
+                <!-- CAMBIO AQUÍ: Columna 'ÁREA' eliminada de la fila de la tabla -->
                 <td class="px-4 py-3 text-center">${empresa.dependencia || '-'}</td>
                 <td class="px-4 py-3 text-center">${empresa.dispositivo || '-'}</td>
                 <td class="px-4 py-3 text-center">${empresa.codigo_dispositivo || '-'}</td>
@@ -300,21 +444,32 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Crear una copia de los datos para no modificar los originales
-        const exportableData = dataToExport.map(item => ({ ...item }));
+        const exportableData = dataToExport.map(item => {
+            const newItem = { ...item };
+            delete newItem._id;
+            delete newItem.__v;
 
-        // Eliminar el campo '_id' de cada objeto antes de exportar
-        exportableData.forEach(item => {
-            delete item._id;
-            delete item.__v; // Eliminar también la versión de Mongoose si no es necesaria
+            // Formatear fechas y horas para Excel
+            newItem.fecha_entrada = newItem.fecha_entrada ? new Date(newItem.fecha_entrada).toLocaleDateString('es-ES') : '';
+            newItem.hora_entrada = newItem.hora_entrada || '';
+            newItem.fecha_salida = newItem.fecha_salida ? new Date(newItem.fecha_salida).toLocaleDateString('es-ES') : '';
+            newItem.hora_salida = newItem.hora_salida || '';
+
+            return newItem;
         });
 
-        // Asegurarse de que el orden de las cabeceras sea el deseado
-        // Esto asume que el primer objeto en exportableData tiene todas las claves.
-        // Si no, podrías definir las cabeceras manualmente en el orden que las quieres en el Excel.
-        const headers = Object.keys(exportableData[0]);
+        // CAMBIO AQUÍ: Definir el orden manual de las columnas para el Excel de empresas (sin 'area')
+        const headers = [
+            'fecha_entrada', 'hora_entrada', 'fecha_salida', 'hora_salida',
+            'nombre_empresa', 'identificacion', 'area_ingreso', 'empresa', 'carne',
+            'tipo_empresa', // 'area' eliminado
+            'dependencia', 'dispositivo', 'codigo_dispositivo',
+            'observaciones'
+        ];
 
-        const data = exportableData.map(empresa => headers.map(header => empresa[header]));
+        const data = exportableData.map(empresa =>
+            headers.map(header => empresa[header] || '-')
+        );
 
         const workbook = XLSX.utils.book_new();
         const worksheet = XLSX.utils.aoa_to_sheet([headers, ...data]);
@@ -326,13 +481,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- Funciones de Acción en la Tabla (Editar, Salida, Eliminar) ---
     async function handleTableClick(e) {
-        const itemId = e.target.dataset.id; // Usamos data-id que ahora viene del backend (_id)
-        if (!itemId) return; // Si no tiene data-id, no es un botón de acción
+        const itemId = e.target.dataset.id;
+        if (!itemId) return;
 
         if (e.target.classList.contains('edit-btn')) {
             handleEdit(itemId);
         } else if (e.target.classList.contains('salida-btn')) {
-            await handleSalida(itemId);
+            showSalidaForm(itemId); // Mostrar el formulario de salida
         } else if (e.target.classList.contains('delete-btn')) {
             await handleDelete(itemId);
         }
@@ -340,47 +495,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function handleEdit(itemId) {
         state.editMode = true;
-        state.editItemId = itemId; // Almacenar el ID del backend
-        showRegisterForm(); // Mostrar el formulario para edición
-    }
-
-    async function handleSalida(itemId) {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            alert('No está autenticado. Por favor, inicie sesión.');
-            window.location.href = '../login.html';
-            return;
-        }
-
-        const now = new Date();
-        const fechaSalida = prompt('Ingrese la fecha y hora de salida:', `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`);
-
-        if (fechaSalida === null) { // Si el usuario cancela el prompt
-            return;
-        }
-
-        try {
-            const response = await fetch(`${config.apiBaseUrl}/${itemId}/salida`, { // Nueva ruta para actualizar salida
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ fecha_salida: fechaSalida })
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                alert('Fecha de salida registrada exitosamente.');
-                await fetchAndRenderTable(); // Recargar la tabla
-            } else {
-                alert(`Error al registrar salida: ${result.message || 'Error desconocido'}`);
-            }
-        } catch (error) {
-            console.error('Error al registrar salida:', error);
-            alert('Error de conexión con el servidor al registrar salida.');
-        }
+        state.editItemId = itemId;
+        showRegisterForm();
     }
 
     async function handleDelete(itemId) {
@@ -396,45 +512,53 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         try {
+            const headers = getAuthHeaders();
             const response = await fetch(`${config.apiBaseUrl}/${itemId}`, {
                 method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                headers: headers
             });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                let errorMessage = `Error al eliminar registro: HTTP status ${response.status}`;
+                try {
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = errorData.message || errorMessage;
+                } catch (jsonParseError) {
+                    errorMessage = `Error inesperado del servidor: ${errorText.substring(0, 100)}... (no es JSON válido)`;
+                }
+                throw new Error(errorMessage);
+            }
 
             const result = await response.json();
 
-            if (response.ok) {
-                alert('Registro eliminado exitosamente.');
-                await fetchAndRenderTable(); // Recargar la tabla
-            } else {
-                alert(`Error al eliminar registro: ${result.message || 'Error desconocido'}`);
-            }
+            alert('Registro eliminado exitosamente.');
+            await fetchAndRenderTable();
         } catch (error) {
             console.error('Error al eliminar registro:', error);
-            alert('Error de conexión con el servidor al eliminar registro.');
+            alert(`Error de conexión con el servidor o al procesar la respuesta: ${error.message}`);
         }
     }
 
     function loadEditData() {
-        // En modo edición, buscar la empresa en los datos actuales por su _id del backend
         const empresa = state.empresasData.find(p => p._id === state.editItemId);
         if (empresa) {
             // Rellenar el formulario con los datos de la empresa
-            elements.registerForm.fecha_entrada.value = empresa.fecha_entrada || '';
+            // Formatear la fecha para input type="date"
+            elements.registerForm.fecha_entrada.value = empresa.fecha_entrada ? new Date(empresa.fecha_entrada).toISOString().split('T')[0] : '';
+            elements.registerForm.hora_entrada.value = empresa.hora_entrada || '';
+
             elements.registerForm.nombre_empresa.value = empresa.nombre_empresa || '';
             elements.registerForm.identificacion.value = empresa.identificacion || '';
             elements.registerForm.area_ingreso.value = empresa.area_ingreso || '';
             elements.registerForm.empresa.value = empresa.empresa || '';
             elements.registerForm.carne.value = empresa.carne || '';
             elements.registerForm.tipo_empresa.value = empresa.tipo_empresa || '';
-            elements.registerForm.area.value = empresa.area || '';
+            // CAMBIO AQUÍ: No intentar cargar el valor de 'area'
             elements.registerForm.dependencia.value = empresa.dependencia || '';
             elements.registerForm.dispositivo.value = empresa.dispositivo || '';
             elements.registerForm.codigo_dispositivo.value = empresa.codigo_dispositivo || '';
             elements.registerForm.observaciones.value = empresa.observaciones || '';
-            // No cargar fecha_salida en el formulario de entrada
         }
     }
 

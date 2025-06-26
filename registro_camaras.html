@@ -10,110 +10,145 @@
     <link rel="stylesheet" href="assets/css/camaras.css">
 </head>
 <body class="text-white">
-    <div class="container mx-auto p-4 relative z-10">
-        <header class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-bold">SIS-FP / Registro de Cámaras</h1>
-            <div class="flex items-center space-x-4">
-                <div id="userDisplay" class="bg-white text-blue-800 px-4 py-2 rounded-full font-bold"></div>
-                <a href="menu.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center">
-                    <i class="fas fa-arrow-left mr-2"></i> REGRESAR
-                </a>
-            </div>
-        </header>
+<div class="container mx-auto p-4 relative z-10">
+    <header class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold">SIS-FP / Registro de Cámaras</h1>
+        <div class="flex items-center space-x-4">
+            <div id="userDisplay" class="bg-white text-blue-800 px-4 py-2 rounded-full font-bold"></div>
+            <a href="menu.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i> REGRESAR
+            </a>
+        </div>
+    </header>
 
-        <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
-            <div class="relative flex-grow max-w-md">
-                <input type="text" id="searchInput" placeholder="Buscar..." class="w-full px-4 py-2 rounded text-black">
-                <i class="fas fa-search absolute right-3 top-3 text-gray-500"></i>
+    <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
+        <div class="relative flex-grow max-w-md">
+            <input type="text" id="searchInput" placeholder="Buscar..." class="w-full px-4 py-2 rounded text-black">
+            <i class="fas fa-search absolute right-3 top-3 text-gray-500"></i>
+        </div>
+        <div class="flex space-x-2">
+            <button id="newRegisterBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center">
+                <i class="fas fa-plus mr-2"></i> NUEVO REGISTRO
+            </button>
+            <button id="exportExcelBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center">
+                <i class="fas fa-file-excel mr-2"></i> EXPORTAR EXCEL
+            </button>
+        </div>
+    </div>
+
+    <div id="newRegisterForm" class="bg-white bg-opacity-20 p-4 rounded-lg mb-6 hidden">
+        <h2 class="text-xl font-bold mb-4">Nuevo Registro de Cámaras</h2>
+        <form id="registerForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- No necesitamos fechaRegistro como hidden input, lo autocompletaremos en JS si es necesario -->
+            <div><label class="block mb-1">Área</label><input type="text" name="area" class="w-full px-4 py-2 rounded text-black uppercase" required></div>
+            <div><label class="block mb-1">Cámara</label><input type="text" name="camara" class="w-full px-4 py-2 rounded text-black uppercase" required></div>
+            <div><label class="block mb-1">Tipo</label>
+                <select name="tipo" class="w-full px-4 py-2 rounded text-black uppercase" required>
+                    <option value="">Seleccione...</option>
+                    <option value="PTZ">PTZ</option>
+                    <option value="FIJA">FIJA</option>
+                </select>
             </div>
+            <div><label class="block mb-1">Estado Actual</label>
+                <select name="estado_actual" class="w-full px-4 py-2 rounded text-black uppercase" required>
+                    <option value="">Seleccione...</option>
+                    <option value="FUNCIONANDO">FUNCIONANDO</option>
+                    <option value="NO FUNCIONA">NO FUNCIONA</option>
+                    <option value="CON FALLAS">CON FALLAS</option>
+                </select>
+            </div>
+            <!-- Eliminamos fecha_falla y fecha_arreglo del formulario principal, se manejarán en el modal de historial -->
+            <div><label class="block mb-1">Observaciones Generales</label><textarea name="observaciones_general" class="w-full px-4 py-2 rounded text-black uppercase"></textarea></div>
+            <div class="flex items-end space-x-2 mt-4 col-span-1 md:col-span-2 lg:col-span-3">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Guardar</button>
+                <button type="button" id="cancelFormBtn" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">Cancelar</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabla Principal de Registros de Cámaras -->
+    <div class="bg-white bg-opacity-10 rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full" id="camarasTable">
+                <thead class="bg-blue-600">
+                <tr>
+                    <th class="px-4 py-3 text-center">ITEM</th>
+                    <th class="px-4 py-3">ÁREA</th>
+                    <th class="px-4 py-3">CÁMARA</th>
+                    <th class="px-4 py-3">TIPO</th>
+                    <th class="px-4 py-3">ESTADO ACTUAL</th>
+                    <th class="px-4 py-3 text-center">ÚLTIMA FALLA</th>
+                    <th class="px-4 py-3 text-center">ÚLTIMO ARREGLO</th>
+                    <th class="px-4 py-3 text-center">OBSERVACIONES GENERALES</th>
+                    <th class="px-4 py-3 text-center">ACCIÓN</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-700" id="tableBody"></tbody>
+            </table>
+        </div>
+        <div class="px-6 py-4 flex items-center justify-between border-t border-gray-700">
+            <div class="text-sm text-gray-400">Mostrando <span id="currentRecords">0</span> registros</div>
             <div class="flex space-x-2">
-                <button id="newRegisterBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center">
-                    <i class="fas fa-plus mr-2"></i> NUEVO REGISTRO
-                </button>
-                <button id="exportExcelBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center">
-                    <i class="fas fa-file-excel mr-2"></i> EXPORTAR EXCEL
-                </button>
-            </div>
-        </div>
-
-        <div id="newRegisterForm" class="bg-white bg-opacity-20 p-4 rounded-lg mb-6 hidden">
-            <h2 class="text-xl font-bold mb-4">Nuevo Registro de Cámaras</h2>
-            <form id="registerForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <input type="hidden" id="fechaRegistro" name="fechaRegistro">
-                <div><label class="block mb-1">Área</label><input type="text" name="area" class="w-full px-4 py-2 rounded text-black" required></div>
-                <div><label class="block mb-1">Cámara</label><input type="text" name="camara" class="w-full px-4 py-2 rounded text-black" required></div>
-                <div><label class="block mb-1">Tipo</label>
-                    <select name="tipo" class="w-full px-4 py-2 rounded text-black" required>
-                        <option value="PTZ">PTZ</option>
-                        <option value="FIJA">FIJA</option>
-                    </select>
-                </div>
-                <div><label class="block mb-1">Estado Actual</label>
-                    <select name="estado_actual" class="w-full px-4 py-2 rounded text-black">
-                        <option value="Funcionando">Funcionando</option>
-                        <option value="No Funciona">No Funciona</option>
-                        <option value="Con Fallas">Con Fallas</option>
-                    </select>
-                </div>
-                <div><label class="block mb-1">Fecha de Falla</label><input type="date" name="fecha_falla" class="w-full px-4 py-2 rounded text-black"></div>
-                <div><label class="block mb-1">Fecha de Arreglo</label><input type="date" name="fecha_arreglo" class="w-full px-4 py-2 rounded text-black"></div>
-                <div><label class="block mb-1">Observaciones</label><textarea name="observaciones" class="w-full px-4 py-2 rounded text-black"></textarea></div>
-                <div class="flex items-end space-x-2">
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Guardar</button>
-                    <button type="button" id="cancelFormBtn" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">Cancelar</button>
-                </div>
-            </form>
-        </div>
-
-        <div class="bg-white bg-opacity-10 rounded-lg overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full" id="camarasTable">
-                    <thead class="bg-blue-600">
-                        <tr>
-                            <th class="px-4 py-3 text-center">ITEM</th>
-                            <th class="px-4 py-3">ÁREA</th>
-                            <th class="px-4 py-3">CÁMARA</th>
-                            <th class="px-4 py-3">TIPO</th>
-                            <th class="px-4 py-3">ESTADO ACTUAL</th>
-                            <th class="px-4 py-3 text-center">ACCIÓN</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-700" id="tableBody"></tbody>
-                </table>
-            </div>
-            <div class="px-6 py-4 flex items-center justify-between border-t border-gray-700">
-                <div class="text-sm text-gray-400">Mostrando <span id="currentRecords">0</span> registros</div>
-                <div class="flex space-x-2">
-                    <button class="px-3 py-1 rounded bg-blue-600 text-white disabled:opacity-50" id="prevPageBtn" disabled><i class="fas fa-chevron-left"></i></button>
-                    <span id="currentPage" class="px-3 py-1 rounded bg-blue-600 text-white">1</span>
-                    <button class="px-3 py-1 rounded bg-white bg-opacity-10 hover:bg-opacity-20" id="nextPageBtn"><i class="fas fa-chevron-right"></i></button>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white bg-opacity-10 rounded-lg overflow-hidden mt-6">
-            <h2 class="text-xl font-bold mb-4">Historial de Cámaras con Fallas</h2>
-            <div class="overflow-x-auto">
-                <table class="w-full" id="historialTable">
-                    <thead class="bg-blue-600">
-                        <tr>
-                            <th class="px-4 py-3 text-center">ITEM</th>
-                            <th class="px-4 py-3">ÁREA</th>
-                            <th class="px-4 py-3">CÁMARA</th>
-                            <th class="px-4 py-3">TIPO</th>
-                            <th class="px-4 py-3">ESTADO ACTUAL</th>
-                            <th class="px-4 py-3 text-center">FECHA DE FALLA</th>
-                            <th class="px-4 py-3 text-center">FECHA DE ARREGLO</th>
-                            <th class="px-4 py-3">OBSERVACIONES</th>
-                            <th class="px-4 py-3 text-center">ACCIÓN</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-700" id="historialBody"></tbody>
-                </table>
+                <button class="px-3 py-1 rounded bg-blue-600 text-white disabled:opacity-50" id="prevPageBtn" disabled><i class="fas fa-chevron-left"></i></button>
+                <span id="currentPage" class="px-3 py-1 rounded bg-blue-600 text-white">1</span>
+                <button class="px-3 py-1 rounded bg-white bg-opacity-10 hover:bg-opacity-20" id="nextPageBtn"><i class="fas fa-chevron-right"></i></button>
             </div>
         </div>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
-    <script src="assets/js/camaras.js"></script>
+
+    <!-- Modal para el Historial de Cámaras (nuevo) -->
+    <div id="historialModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-lg max-w-2xl w-full text-white">
+            <h2 class="text-xl font-bold mb-4">Historial de <span id="historialCamaraNombre"></span> (<span id="historialCamaraArea"></span>)</h2>
+
+            <!-- Formulario para añadir nueva entrada al historial -->
+            <form id="addHistorialEntryForm" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <input type="hidden" id="historialCamaraId" name="camaraId">
+                <div>
+                    <label class="block mb-1">Estado del Evento</label>
+                    <select name="estado_actual_historial" class="w-full px-4 py-2 rounded text-black uppercase" required>
+                        <option value="">Seleccione...</option>
+                        <option value="FUNCIONANDO">FUNCIONANDO</option>
+                        <option value="NO FUNCIONA">NO FUNCIONA</option>
+                        <option value="CON FALLAS">CON FALLAS</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block mb-1">Fecha del Evento</label>
+                    <input type="date" name="fecha_evento_historial" class="w-full px-4 py-2 rounded text-black" required>
+                </div>
+                <div class="col-span-1 md:col-span-2">
+                    <label class="block mb-1">Observaciones del Evento</label>
+                    <textarea name="observaciones_historial" class="w-full px-4 py-2 rounded text-black uppercase"></textarea>
+                </div>
+                <div class="col-span-1 md:col-span-2 flex justify-end space-x-2">
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Añadir Evento</button>
+                </div>
+            </form>
+
+            <!-- Tabla del historial dentro del modal -->
+            <div class="overflow-x-auto max-h-80 custom-scrollbar">
+                <table class="w-full">
+                    <thead class="bg-blue-700 sticky top-0">
+                    <tr>
+                        <th class="px-4 py-3 text-center">FECHA EVENTO</th>
+                        <th class="px-4 py-3">ESTADO</th>
+                        <th class="px-4 py-3">OBSERVACIONES</th>
+                    </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-700" id="historialModalBody">
+                    <!-- Contenido del historial se cargará aquí -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="flex justify-end mt-4">
+                <button type="button" id="closeHistorialModalBtn" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
+<script src="assets/js/camaras.js"></script>
 </body>
 </html>
