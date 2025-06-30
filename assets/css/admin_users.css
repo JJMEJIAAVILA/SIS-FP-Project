@@ -1,0 +1,284 @@
+/* assets/css/admin_users.css - Estilos específicos para la Administración de Usuarios */
+
+/* Variables CSS para consistencia de colores y sombras (pueden ser las mismas que en global/reporte_general) */
+:root {
+    --primary-blue: #00a8e8;
+    --dark-bg-opacity: rgba(0, 0, 0, 0.7); /* Fondo oscuro semitransparente para el contenedor principal */
+    --card-bg-opacity: rgba(255, 255, 255, 0.08); /* Fondo de tarjetas/formularios/tablas */
+    --input-bg-opacity: rgba(255, 255, 255, 0.15); /* Fondo de inputs y selects */
+    --border-color: rgba(255, 255, 255, 0.2);
+    --text-light: rgba(255, 255, 255, 0.9);
+    --text-muted: rgba(255, 255, 255, 0.6);
+    --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.4);
+    --shadow-heavy: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+/* Estilos para el contenedor principal */
+.container {
+    background-color: var(--dark-bg-opacity);
+    backdrop-filter: blur(10px); /* Efecto de desenfoque "glassmorphism" */
+    -webkit-backdrop-filter: blur(10px);
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow-heavy);
+    border: 1px solid var(--border-color);
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    width: 95%;
+    max-width: 1200px; /* Ajuste de ancho para esta interfaz */
+    box-sizing: border-box;
+}
+
+/* Estilos de la cabecera */
+header h1 {
+    color: var(--primary-blue);
+    font-size: 2.2rem;
+    text-shadow: 0 2px 5px rgba(0, 168, 232, 0.3);
+}
+
+#userDisplay {
+    background-color: var(--input-bg-opacity);
+    color: var(--text-light);
+    border: 1px solid var(--border-color);
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    box-shadow: var(--shadow-light);
+}
+
+header a { /* Estilo para el botón REGRESAR */
+    background-color: #6c757d; /* Gris para "Regresar" */
+    color: white;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    box-shadow: var(--shadow-light);
+}
+
+header a:hover {
+    background-color: #5a6268;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Estilos para el campo de búsqueda */
+#searchInput {
+    background-color: var(--input-bg-opacity);
+    border: 1px solid var(--border-color);
+    color: var(--text-light);
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+#searchInput::placeholder {
+    color: var(--text-muted);
+}
+#searchInput:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(0, 168, 232, 0.3);
+}
+
+/* Estilos para los botones de acción (Nuevo Usuario, etc.) */
+button {
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: var(--shadow-light);
+}
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Estilos para el formulario de Nuevo/Editar Usuario */
+#userFormContainer {
+    background-color: var(--card-bg-opacity);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow-light);
+}
+#userFormContainer h2 {
+    color: var(--primary-blue);
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    text-shadow: 0 1px 2px rgba(0, 168, 232, 0.2);
+}
+
+#userForm label {
+    color: var(--text-light);
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+#userForm input[type="text"],
+#userForm input[type="email"],
+#userForm input[type="password"],
+#userForm select {
+    background-color: var(--input-bg-opacity);
+    border: 1px solid var(--border-color);
+    color: var(--text-light);
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+}
+#userForm input::placeholder {
+    color: var(--text-muted);
+}
+#userForm input:focus,
+#userForm select:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(0, 168, 232, 0.3);
+}
+
+/* Estilos para las opciones del select */
+#userForm select option {
+    background-color: #333 !important; /* Fondo oscuro */
+    color: white !important; /* Texto blanco */
+}
+#userForm select option:hover {
+    background-color: #555 !important;
+}
+
+/* Estilos para la tabla de usuarios */
+.bg-white.bg-opacity-10 { /* Reutilizamos la clase para el contenedor de la tabla */
+    background-color: var(--card-bg-opacity);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: var(--shadow-light);
+    color: var(--text-light);
+}
+
+#usersTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#usersTable thead {
+    background-color: #1a202c; /* Un azul oscuro para el encabezado de la tabla */
+    color: white;
+}
+
+#usersTable th, #usersTable td {
+    padding: 0.8rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#usersTable th {
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+}
+
+#usersTable tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.05); /* Efecto hover en filas */
+}
+
+/* Estilos para los botones de acción en la tabla (Editar, Eliminar) */
+.edit-btn, .delete-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+    border-radius: 6px;
+    box-shadow: none; /* Sin sombra adicional para estos pequeños botones */
+}
+.edit-btn:hover, .delete-btn:hover {
+    transform: none; /* Sin transformación al pasar el mouse */
+    box-shadow: none;
+}
+
+/* Estilos para la paginación */
+.px-6.py-4.flex.items-center.justify-between.border-t.border-gray-700 {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Modal de Confirmación */
+#deleteConfirmModal > div { /* El cuadro del modal */
+    background-color: #2d3748; /* Un gris oscuro para el modal */
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: var(--shadow-heavy);
+    color: var(--text-light);
+}
+
+#deleteConfirmModal h2 {
+    color: #ef4444; /* Rojo para el título de confirmación */
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+#deleteConfirmModal p {
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+
+#deleteConfirmModal button {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    border-radius: 8px;
+}
+
+/* Media Queries para Responsividad */
+@media (max-width: 1024px) {
+    .container {
+        padding: 1.5rem;
+        margin: 1rem auto;
+    }
+    header h1 {
+        font-size: 1.8rem;
+    }
+    #userFormContainer {
+        padding: 1rem;
+    }
+    #userFormContainer h2 {
+        font-size: 1.5rem;
+    }
+    #userForm input, #userForm select {
+        font-size: 0.85rem;
+        padding: 0.5rem 0.8rem;
+    }
+    #usersTable th, #usersTable td {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.8rem;
+    }
+    .edit-btn, .delete-btn {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+    header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    header h1 {
+        font-size: 1.5rem;
+    }
+    .flex.flex-wrap.justify-between.items-center.mb-6.gap-4 {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    #searchInput {
+        width: 100%;
+    }
+    .flex.space-x-2 {
+        width: 100%;
+        justify-content: center;
+    }
+    #userForm {
+        grid-template-columns: 1fr; /* Una columna en móviles */
+    }
+    #usersTable th, #usersTable td {
+        white-space: nowrap; /* Evitar que el texto se rompa en la tabla */
+    }
+}

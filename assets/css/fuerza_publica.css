@@ -1,10 +1,353 @@
-table { min-width: 1200px; }
-th { background-color: rgba(0, 95, 115, 0.9); position: sticky; top: 0; white-space: nowrap; }
-td { padding: 0.75rem 1rem; }
-tr:nth-child(even) { background-color: rgba(255, 255, 255, 0.03); }
-#newRegisterForm { transition: all 0.3s ease; }
+/* assets/css/fuerza_publica.css - Basado en empresas.css y global.css */
+
+/* Ajustes generales del contenedor principal */
+/* Nota: Se asume que el 'body' tiene un fondo oscuro desde global.css. */
+.container {
+    background-color: rgba(0, 0, 0, 0.7); /* Fondo oscuro semitransparente */
+    backdrop-filter: blur(8px); /* Efecto de desenfoque */
+    -webkit-backdrop-filter: blur(8px); /* Compatibilidad con Safari */
+    padding: 2.5rem; /* Padding consistente con otras páginas */
+    border-radius: 12px; /* Bordes más redondeados */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); /* Sombra pronunciada */
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Borde sutil */
+    margin-top: 2rem; /* Margen superior para separarlo del borde de la pantalla */
+    margin-bottom: 2rem; /* Margen inferior */
+    width: 95%; /* Ajuste de ancho para responsividad */
+    box-sizing: border-box; /* Incluir padding y borde en el ancho */
+}
+
+/* Estilos de la cabecera */
+header h1 {
+    color: #00a8e8; /* Color primario para el título */
+    font-size: 2.2rem; /* Tamaño de fuente ligeramente más grande */
+}
+
+#userDisplay {
+    background-color: rgba(255, 255, 255, 0.15); /* Fondo semitransparente para el nombre de usuario */
+    color: white; /* Texto blanco */
+    border: 1px solid rgba(255, 255, 255, 0.2); /* Borde sutil */
+    font-weight: normal; /* No tan bold como el predeterminado de Tailwind */
+    padding: 0.5rem 1rem; /* Ajuste de padding */
+    border-radius: 9999px; /* Completamente redondeado */
+}
+
+header a { /* Estilo para el botón REGRESAR */
+    background-color: #6c757d; /* Gris para "Regresar" */
+    color: white;
+    padding: 0.75rem 1.25rem; /* Ajuste de padding */
+    border-radius: 8px; /* Bordes más redondeados */
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+header a:hover {
+    background-color: #5a6268;
+    transform: translateY(-2px);
+}
+
+/* Barra de búsqueda e inputs de filtro/acción */
+.flex-wrap .relative input { /* input de búsqueda */
+    background-color: rgba(255, 255, 255, 0.08); /* Fondo de input sutilmente claro */
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Borde más pronunciado */
+    color: white; /* Texto del input en blanco */
+    padding: 0.8rem 1rem; /* Ajuste de padding */
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.flex-wrap .relative input::placeholder {
+    color: rgba(255, 255, 255, 0.5); /* Placeholder más claro */
+}
+
+.flex-wrap .relative .fas.fa-search { /* Icono de búsqueda */
+    color: rgba(255, 255, 255, 0.6); /* Color del icono */
+    right: 1rem; /* Posición ajustada */
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.flex-wrap .space-x-2 button { /* Botones de NUEVO REGISTRO y EXPORTAR */
+    padding: 0.9rem 1.5rem; /* Padding consistente con otros botones */
+    border-radius: 8px; /* Bordes más redondeados */
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    font-weight: bold;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; /* Espacio entre icono y texto */
+}
+
+#newRegisterBtn {
+    background-color: #28a745; /* Verde para "Nuevo Registro" */
+    color: white;
+}
+#newRegisterBtn:hover {
+    background-color: #218838;
+    transform: translateY(-2px);
+}
+
+#exportExcelBtn { /* El ID del botón es 'exportExcelBtn' en el HTML */
+    background-color: #00a8e8; /* Azul primario para "Exportar" */
+    color: white;
+}
+#exportExcelBtn:hover {
+    background-color: #0095d1;
+    transform: translateY(-2px);
+}
+
+/* Formulario de Nuevo Registro/Edición */
+#newRegisterForm {
+    background-color: rgba(0, 0, 0, 0.5); /* Fondo oscuro más transparente para el formulario */
+    backdrop-filter: blur(5px); /* Desenfoque para el formulario */
+    -webkit-backdrop-filter: blur(5px);
+    padding: 2rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    transition: all 0.4s ease-in-out; /* Transición más suave */
+    transform-origin: top; /* Animación desde arriba */
+}
+
+#newRegisterForm.hidden {
+    opacity: 0;
+    transform: scaleY(0);
+    height: 0;
+    overflow: hidden;
+    padding: 0 2rem; /* Reducir padding horizontal también al ocultar */
+    margin-bottom: 0;
+}
+
+#newRegisterForm h2 {
+    color: white; /* Título del formulario en blanco */
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+}
+
+#registerForm label {
+    color: rgba(255, 255, 255, 0.9); /* Texto de label ligeramente translúcido */
+    font-weight: bold;
+    margin-bottom: 0.3rem; /* Espacio entre label y input */
+}
+
+#registerForm input,
+#registerForm select,
+#registerForm textarea {
+    background-color: rgba(255, 255, 255, 0.1); /* Fondo de inputs/selects/textarea */
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 0.8rem 1rem;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+}
+
+#registerForm input::placeholder,
+#registerForm textarea::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+#registerForm select option {
+    background-color: #333; /* Fondo oscuro para las opciones del select */
+    color: white;
+}
+
+#registerForm .flex.items-end button { /* Botones GUARDAR y CANCELAR dentro del formulario */
+    padding: 0.9rem 1.8rem;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    font-size: 1rem;
+}
+
+#registerForm button[type="submit"] {
+    background-color: #00a8e8; /* Azul primario para "Guardar" */
+    color: white;
+}
+#registerForm button[type="submit"]:hover {
+    background-color: #0095d1;
+    transform: translateY(-2px);
+}
+
+#cancelFormBtn {
+    background-color: #6c757d; /* Gris para "Cancelar" */
+    color: white;
+}
+#cancelFormBtn:hover {
+    background-color: #5a6268;
+    transform: translateY(-2px);
+}
+
+/* Estilos de la tabla */
+.bg-white.bg-opacity-10 { /* Contenedor de la tabla */
+    background-color: rgba(0, 0, 0, 0.5); /* Fondo oscuro más transparente */
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+table {
+    min-width: 1200px; /* Ancho mínimo de la tabla, según lo proporcionado */
+    color: white; /* Color de texto general de la tabla */
+}
+
+th {
+    background-color: rgba(0, 95, 115, 0.9); /* Azul oscuro de tu tema */
+    position: sticky;
+    top: 0;
+    white-space: nowrap;
+    text-align: center;
+    padding: 1rem 0.75rem; /* Ajustar padding de th */
+    color: white; /* Color de texto de los encabezados */
+}
+
+td {
+    padding: 0.75rem 1rem;
+    white-space: nowrap; /* Evitar que el texto se rompa en varias líneas */
+    border-color: rgba(255, 255, 255, 0.1); /* Líneas divisorias de tabla más sutiles */
+    vertical-align: middle; /* Centrar verticalmente el contenido de las celdas */
+}
+
+tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.05); /* Filas pares ligeramente más claras */
+}
+
+.hover\:bg-white.hover\:bg-opacity-10:hover { /* Efecto hover en filas */
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Botones de acción en la tabla (Editar, Eliminar) */
+.edit-btn, .delete-btn {
+    padding: 0.5rem 0.8rem;
+    border-radius: 6px; /* Bordes redondeados */
+    font-weight: bold;
+    font-size: 0.85rem;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    margin: 0.2rem; /* Espacio entre botones */
+}
+
+.edit-btn {
+    background-color: #ffc107; /* Amarillo para editar */
+    color: black;
+}
+.edit-btn:hover {
+    background-color: #e0a800;
+    transform: translateY(-1px);
+}
+
+.delete-btn {
+    background-color: #dc3545; /* Rojo para eliminar */
+    color: white;
+}
+.delete-btn:hover {
+    background-color: #c82333;
+    transform: translateY(-1px);
+}
+
+
+/* Paginación */
+.px-6.py-4.flex.items-center.justify-between.border-t.border-gray-700 {
+    border-top: 1px solid rgba(255, 255, 255, 0.15); /* Borde superior de paginación */
+    color: rgba(255, 255, 255, 0.7); /* Color de texto para el contador de registros */
+}
+
+.px-3.py-1.rounded.bg-blue-600.text-white { /* Botón de página actual */
+    background-color: #00a8e8; /* Azul primario */
+}
+
+.px-3.py-1.rounded.bg-white.bg-opacity-10:not(:disabled) { /* Botones de paginación siguiente/anterior */
+    background-color: rgba(255, 255, 255, 0.15);
+    color: white;
+    transition: background-color 0.3s ease;
+}
+
+.px-3.py-1.rounded.bg-white.bg-opacity-10:not(:disabled):hover {
+    background-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Media Queries para Responsividad */
 @media (max-width: 1024px) {
-    .container { padding: 1rem; }
-    header { flex-direction: column; gap: 1rem; text-align: center; }
-    #newRegisterForm .grid { grid-template-columns: 1fr !important; }
+    .container {
+        padding: 1.5rem;
+        margin: 1rem auto;
+        width: 98%; /* Ocupar casi todo el ancho en tabletas */
+    }
+
+    header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+        align-items: center; /* Centrar items */
+    }
+
+    header h1 {
+        font-size: 1.8rem;
+    }
+
+    .flex-wrap { /* Contenedor de búsqueda y botones */
+        flex-direction: column;
+        align-items: stretch; /* Estirar items para ocupar el ancho */
+        gap: 1rem;
+    }
+
+    .flex-wrap .relative.flex-grow {
+        max-width: 100%; /* El input de búsqueda ocupa todo el ancho */
+    }
+
+    .flex-wrap .space-x-2 {
+        flex-direction: column; /* Apilar botones */
+        width: 100%;
+        gap: 0.8rem;
+    }
+
+    .flex-wrap .space-x-2 button {
+        width: 100%; /* Botones de acción ocupan todo el ancho */
+        max-width: 300px; /* Ancho máximo para evitar que sean demasiado anchos */
+        margin: 0 auto; /* Centrar botones apilados */
+    }
+
+    #newRegisterForm .grid {
+        grid-template-columns: 1fr !important; /* Siempre una columna en tabletas y móviles */
+    }
+
+    table {
+        font-size: 0.8rem; /* Reducir tamaño de fuente de la tabla */
+        min-width: 100%; /* Permitir que la tabla se encoja si es necesario */
+        display: block; /* Para permitir el scroll horizontal */
+        overflow-x: auto; /* Habilitar scroll horizontal en la tabla */
+        -webkit-overflow-scrolling: touch; /* Suavizar el scroll en iOS */
+        border-collapse: collapse; /* Asegurar que los bordes se colapsen correctamente */
+    }
+
+    th, td {
+        padding: 0.6rem; /* Reducir padding de celdas */
+        white-space: nowrap; /* Mantener el contenido en una línea */
+    }
+
+    .px-6.py-4.flex.items-center.justify-between {
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+    header h1 {
+        font-size: 1.5rem;
+    }
+    .flex-wrap .relative input,
+    .flex-wrap .space-x-2 button,
+    #registerForm input,
+    #registerForm select,
+    #registerForm textarea,
+    #registerForm .flex.items-end button {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.9rem;
+    }
+    .edit-btn, .delete-btn {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.75rem;
+    }
 }

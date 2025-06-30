@@ -1,48 +1,262 @@
-/* Fondo global para todas las páginas */
+/* assets/css/reporte_general.css - Estilos específicos para el Dashboard (Atractivo e Innovador) */
+
+/* Variables CSS para consistencia de colores y sombras */
+:root {
+    --primary-blue: #00a8e8;
+    --dark-bg: rgba(0, 0, 0, 0.7);
+    --card-bg: rgba(255, 255, 255, 0.08); /* Fondo de tarjeta más sutil */
+    --input-bg: rgba(255, 255, 255, 0.15);
+    --border-color: rgba(255, 255, 255, 0.2);
+    --text-light: rgba(255, 255, 255, 0.9);
+    --text-muted: rgba(255, 255, 255, 0.6);
+    --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.4);
+    --shadow-heavy: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+/* Fondo global (ya en global.css, pero se refuerza la idea) */
 body {
-    background: url('../assets/img/puerto-fondo.jpg') no-repeat center center fixed;
-    background-size: cover;
-    min-height: 100vh;
-    margin: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Inter', sans-serif; /* Usar Inter si está disponible, sino una sans-serif genérica */
 }
 
-/* Mejoras para tablas */
-table {
-    width: 100%;
-    border-collapse: collapse;
+/* Contenedor principal del dashboard */
+.container {
+    background-color: var(--dark-bg);
+    backdrop-filter: blur(12px); /* Mayor desenfoque para efecto "glassmorphism" */
+    -webkit-backdrop-filter: blur(12px);
+    padding: 3rem; /* Más padding */
+    border-radius: 16px; /* Más redondeado */
+    box-shadow: var(--shadow-heavy);
+    border: 1px solid var(--border-color);
+    margin-top: 3rem;
+    margin-bottom: 3rem;
+    width: 95%;
+    max-width: 1600px; /* Permitir un poco más de ancho */
+    box-sizing: border-box;
 }
 
-th, td {
-    padding: 0.5rem;
-    text-align: left;
+/* Header */
+header h1 {
+    color: var(--primary-blue);
+    font-size: 2.5rem; /* Título más grande */
+    text-shadow: 0 2px 5px rgba(0, 168, 232, 0.3); /* Sombra para el título */
 }
 
-/* Transiciones suaves para elementos interactivos */
-a, button {
+#userDisplay {
+    background-color: var(--input-bg);
+    color: var(--text-light);
+    border: 1px solid var(--border-color);
+    font-weight: 600; /* Un poco más de peso */
+    padding: 0.6rem 1.2rem;
+    border-radius: 9999px;
+    box-shadow: var(--shadow-light);
+}
+
+header a {
+    background-color: #4a5568; /* Un gris más oscuro */
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border-radius: 10px; /* Más redondeado */
+    box-shadow: var(--shadow-light);
     transition: all 0.3s ease;
 }
-
-/* Estilos para los contenedores de gráficos */
-.chart-container {
-    position: relative;
-    height: 300px;
-    width: 100%;
+header a:hover {
+    background-color: #2d3748;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
 }
 
-/* Mejoras de accesibilidad para focus */
-input:focus, select:focus, button:focus {
-    outline: 2px solid rgba(59, 130, 246, 0.5);
-    outline-offset: 2px;
+/* KPI Cards */
+.kpi-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: var(--shadow-light);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.kpi-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
 }
 
-/* Clase para el overlay oscuro */
-.bg-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
-    z-index: -1;
+.kpi-icon {
+    width: 50px;
+    height: 50px;
+    min-width: 50px; /* Asegurar que el icono no se encoja */
+    min-height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Colores para los iconos de KPI (ejemplos) */
+.kpi-icon.bg-red-500 { background-color: #ef4444; }
+.kpi-icon.bg-blue-500 { background-color: #3b82f6; }
+.kpi-icon.bg-green-500 { background-color: #22c55e; }
+.kpi-icon.bg-purple-500 { background-color: #a855f7; }
+.kpi-icon.bg-yellow-500 { background-color: #f59e0b; } /* Color para Personas Verificadas */
+
+
+.kpi-content {
+    display: flex;
+    flex-direction: column;
+}
+.kpi-label {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.kpi-value {
+    font-size: 2.5rem; /* Valor más grande y destacado */
+    font-weight: bold;
+    color: var(--primary-blue);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* General card style for charts and filters */
+.bg-card { /* Nueva clase para todas las tarjetas de contenido */
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow-light);
+}
+
+.bg-card h2 {
+    color: var(--primary-blue);
+    font-size: 1.6rem; /* Títulos de gráficos y filtros */
+    margin-bottom: 1rem;
+    text-shadow: 0 1px 2px rgba(0, 168, 232, 0.2);
+}
+
+/* Input y Select (filtros) */
+.bg-input { /* Nueva clase para inputs y selects */
+    background-color: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-light); /* Texto del input en blanco */
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+.bg-input::placeholder {
+    color: var(--text-muted);
+}
+.bg-input:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(0, 168, 232, 0.3);
+}
+
+/* Estilo para el icono del calendario en input type="date" */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1); /* Hace que el icono del calendario sea blanco */
+    cursor: pointer;
+}
+
+/* Estilo para la flecha del select */
+select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23ffffff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='M6 9l6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem auto;
+    padding-right: 2.5rem; /* Espacio para la flecha */
+}
+
+/* ESTILOS CLAVE PARA LAS OPCIONES DEL SELECT */
+.bg-input option {
+    background-color: #333 !important; /* Fondo oscuro para las opciones */
+    color: white !important; /* Texto blanco para las opciones */
+    /* Puedes añadir más estilos si quieres, por ejemplo, hover */
+}
+
+.bg-input option:hover {
+    background-color: #555 !important; /* Un gris un poco más claro al pasar el mouse */
+}
+
+/* Asegura que el texto del valor seleccionado en el select sea blanco */
+.bg-input {
+    color: white;
+}
+
+
+/* Chart.js specific styles (can be customized further in JS) */
+canvas {
+    max-width: 100%;
+    height: 100%; /* Asegura que el canvas ocupe el espacio disponible en la tarjeta */
+}
+
+/* Media Queries para Responsividad */
+@media (max-width: 1024px) {
+    .container {
+        padding: 2rem;
+        margin: 1.5rem auto;
+    }
+    header h1 {
+        font-size: 2rem;
+    }
+    .kpi-card {
+        padding: 1rem;
+        gap: 0.8rem;
+    }
+    .kpi-icon {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        min-height: 40px;
+        font-size: 1.5rem;
+    }
+    .kpi-value {
+        font-size: 2rem;
+    }
+    .kpi-label {
+        font-size: 0.8rem;
+    }
+    .grid {
+        grid-template-columns: 1fr; /* Una columna en pantallas más pequeñas */
+    }
+    .bg-card {
+        padding: 1.2rem;
+    }
+    .bg-card h2 {
+        font-size: 1.4rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 1.5rem;
+        margin: 1rem auto;
+    }
+    header h1 {
+        font-size: 1.8rem;
+    }
+    .kpi-card {
+        flex-direction: column; /* Apilar icono y contenido en móviles */
+        text-align: center;
+    }
+    .kpi-icon {
+        margin-bottom: 0.5rem;
+    }
+    .kpi-value {
+        font-size: 1.8rem;
+    }
+    .bg-card h2 {
+        font-size: 1.2rem;
+    }
+    .bg-input {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.9rem;
+    }
 }

@@ -1,4 +1,4 @@
-// assets/js/login.js
+// assets/js/login.js - ACTUALIZADO para guardar username y role en localStorage
 document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('loginForm');
     const usuarioInput = document.getElementById('usuario');
@@ -69,14 +69,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (response.ok) { // Status 200-299 (Login exitoso)
                     showAlert(data.message || 'Inicio de sesión exitoso.', 'success');
-                    // Almacenar el token JWT. localStorage es persistente.
-                    localStorage.setItem('token', data.token);
-                    // Opcional: almacenar username si lo necesitas más tarde
-                    // localStorage.setItem('username', username);
 
-                    // Redirigir a la página de éxito o dashboard
+                    // --- ¡CAMBIO CLAVE AQUÍ! ---
+                    // Almacenar el token JWT, username y role en localStorage
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('username', data.username); // Asegúrate de que el backend envía 'username'
+                    localStorage.setItem('role', data.role);       // Asegúrate de que el backend envía 'role'
+                    // --- FIN CAMBIO CLAVE ---
+
+                    // Redirigir a la página del menú principal
                     setTimeout(() => {
-                        window.location.href = 'inicio_sesion_exitoso.html'; // O la página que desees, por ejemplo 'menu.html'
+                        window.location.href = 'menu.html'; // Redirige al menú principal
                     }, 1500); // Dar un tiempo para que el usuario lea el mensaje
                 } else { // Errores del servidor (ej. 401 Unauthorized, 400 Bad Request)
                     const errorMessage = data.message || 'Error al iniciar sesión. Intente de nuevo.';

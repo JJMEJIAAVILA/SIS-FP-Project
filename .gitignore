@@ -1,18 +1,27 @@
-# Archivos de IntelliJ IDEA
-.idea/
-*.iml
-*.iws
-*.ipr
-out/
-
-# Directorios de Node.js
+# Ignorar carpetas de módulos de Node.js
 node_modules/
-npm-debug.log
-yarn-error.log
 
-# Ignorar variables de entorno
+# Ignorar archivos de entorno (contienen claves sensibles)
 .env
 
-# Otros archivos que no quieres commitear
-.DS_Store # macOS
-Thumbs.db # Windows
+# Ignorar archivos de log
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Ignorar archivos de sistema operativo
+.DS_Store
+Thumbs.db
+
+# Ignorar posibles archivos de IDE (si usas uno como VS Code, IntelliJ)
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Ignorar archivos de cache
+.cache/
+.nyc_output/
+coverage/dows

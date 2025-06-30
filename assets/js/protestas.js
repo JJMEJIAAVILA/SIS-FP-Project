@@ -1,21 +1,22 @@
+// assets/js/protestas.js - ACTUALIZADO (Corrección de Fecha de Visualización)
 document.addEventListener('DOMContentLoaded', function() {
-    // Configuración
+    console.log('DOM Content Loaded for protestas.js');
+
     const config = {
         itemsPerPage: 10,
-        defaultPage: 1
+        defaultPage: 1,
+        apiBaseUrl: 'http://localhost:3000/api/protestas' // URL de la API para protestas
     };
 
-    // Estado de la aplicación
     const state = {
-        protestasData: [],
+        protestasData: [], // Contendrá los datos de protestas del backend
         currentPage: config.defaultPage,
         filteredData: null,
-        itemCounter: 1,
         editMode: false,
-        editItem: null
+        editItemId: null, // Almacena el _id de MongoDB de la protesta a editar
+        currentProtestaIdToFinalize: null // ID de la protesta a finalizar
     };
 
-    // Elementos del DOM
     const elements = {
         tableBody: document.getElementById('tableBody'),
         newRegisterForm: document.getElementById('newRegisterForm'),
@@ -28,129 +29,337 @@ document.addEventListener('DOMContentLoaded', function() {
         currentPageSpan: document.getElementById('currentPage'),
         prevPageBtn: document.getElementById('prevPageBtn'),
         nextPageBtn: document.getElementById('nextPageBtn'),
-        userDisplay: document.getElementById('userDisplay')
+        userDisplay: document.getElementById('userDisplay'),
+
+        // Elementos del modal de Finalizar Protesta
+        finalizarProtestaModal: document.getElementById('finalizarProtestaModal'),
+        finalizarProtestaForm: document.getElementById('finalizarProtestaForm'),
+        finalizarProtestaId: document.getElementById('finalizarProtestaId'),
+        finalizarProtestaHoraInicio: document.getElementById('finalizarProtestaHoraInicio'),
+        finalizarProtestaFecha: document.getElementById('finalizarProtestaFecha'),
+        modalHoraFinalizacion: document.getElementById('modalHoraFinalizacion'),
+        modalFechaFinalizacion: document.getElementById('modalFechaFinalizacion'),
+        cancelFinalizarModalBtn: document.getElementById('cancelFinalizarModalBtn')
     };
 
-    // Inicialización
-    function init() {
+    // --- Funciones de Inicialización ---
+    async function init() {
+        console.log('init() called');
+        if (!await checkAuthentication()) {
+            return;
+        }
         loadUser();
         setupEventListeners();
-        renderTable();
+        await fetchAndRenderTable(); // Cargar datos desde el backend al inicio
     }
 
+    // --- Protección de la Ruta (Verificación de Token) ---
+    async function checkAuthentication() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('No estás autenticado. Por favor, inicia sesión.');
+            window.location.href = '../login.html';
+            return false;
+        }
+        return true;
+    }
+
+    // Función auxiliar para obtener las cabeceras con el token
+    const getAuthHeaders = () => {
+        const token = localStorage.getItem('token');
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        return headers;
+    };
+
+    // --- Nombre de usuario en mayúsculas ---
     function loadUser() {
-        const currentUser = localStorage.getItem('currentUser');
-        elements.userDisplay.textContent = currentUser || 'Usuario';
+        const storedUsername = localStorage.getItem('username');
+        if (storedUsername) {
+            elements.userDisplay.textContent = storedUsername.toUpperCase();
+        } else {
+            elements.userDisplay.textContent = 'INVITADO';
+        }
     }
 
     function setupEventListeners() {
-        elements.newRegisterBtn.addEventListener('click', showRegisterForm);
-        elements.cancelFormBtn.addEventListener('click', hideRegisterForm);
-        elements.registerForm.addEventListener('submit', handleFormSubmit);
-        elements.searchInput.addEventListener('input', handleSearch);
-        elements.exportExcelBtn.addEventListener('click', exportExcel);
-        elements.prevPageBtn.addEventListener('click', goToPrevPage);
-        elements.nextPageBtn.addEventListener('click', goToNextPage);
-        elements.tableBody.addEventListener('click', handleTableClick);
+        console.log('setupEventListeners() called');
+
+        if (elements.newRegisterBtn) elements.newRegisterBtn.addEventListener('click', showRegisterForm);
+        if (elements.cancelFormBtn) elements.cancelFormBtn.addEventListener('click', hideRegisterForm);
+        if (elements.registerForm) elements.registerForm.addEventListener('submit', handleFormSubmit);
+        else console.error('ERROR: registerForm element not found!');
+
+        if (elements.searchInput) elements.searchInput.addEventListener('input', handleSearch);
+        if (elements.exportExcelBtn) elements.exportExcelBtn.addEventListener('click', exportExcel);
+        if (elements.prevPageBtn) elements.prevPageBtn.addEventListener('click', goToPrevPage);
+        if (elements.nextPageBtn) elements.nextPageBtn.addEventListener('click', goToNextPage);
+        if (elements.tableBody) elements.tableBody.addEventListener('click', handleTableClick);
+
+        // Listeners para el cálculo del tiempo de bloqueo en el formulario principal
+        if (elements.registerForm.hora_inicio) elements.registerForm.hora_inicio.addEventListener('change', calculateBlockTime);
+        if (elements.registerForm.hora_finalizacion) elements.registerForm.hora_finalizacion.addEventListener('change', calculateBlockTime);
+        if (elements.registerForm.fecha) elements.registerForm.fecha.addEventListener('change', calculateBlockTime); // Añadido para recalcular si la fecha de inicio cambia
+        if (elements.registerForm.fecha_finalizacion) elements.registerForm.fecha_finalizacion.addEventListener('change', calculateBlockTime); // Añadido para recalcular si la fecha de finalización cambia
+
+        // Listeners para el modal de Finalizar Protesta
+        if (elements.cancelFinalizarModalBtn) elements.cancelFinalizarModalBtn.addEventListener('click', hideFinalizarProtestaModal);
+        if (elements.finalizarProtestaForm) elements.finalizarProtestaForm.addEventListener('submit', handleFinalizarProtestaSubmit);
+        if (elements.modalHoraFinalizacion) elements.modalHoraFinalizacion.addEventListener('change', calculateModalBlockTime);
+        if (elements.modalFechaFinalizacion) elements.modalFechaFinalizacion.addEventListener('change', calculateModalBlockTime);
     }
 
-    // Funciones de formulario
+    // Funciones de formulario principal
     function showRegisterForm() {
+        console.log('showRegisterForm() called');
         elements.newRegisterForm.classList.remove('hidden');
-        elements.registerForm.reset();
-        document.getElementById('fechaRegistro').value = new Date().toLocaleDateString();
-        elements.registerForm.hora_inicio.addEventListener('change', calculateBlockTime);
-        elements.registerForm.hora_finalizacion.addEventListener('change', calculateBlockTime);
+
+        if (!state.editMode) {
+            elements.registerForm.reset();
+            // Autocompletar fecha actual en el campo de fecha si es un nuevo registro
+            if (elements.registerForm.fecha) {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = (now.getMonth() + 1).toString().padStart(2, '0');
+                const day = now.getDate().toString().padStart(2, '0');
+                elements.registerForm.fecha.value = `${year}-${month}-${day}`;
+            }
+            // Asegurarse de que el campo de fecha_finalizacion esté vacío al crear uno nuevo
+            if (elements.registerForm.fecha_finalizacion) {
+                elements.registerForm.fecha_finalizacion.value = '';
+            }
+        }
+
+        if (elements.registerForm.tiempo_total_bloqueo) {
+            elements.registerForm.tiempo_total_bloqueo.value = '';
+        }
     }
 
     function hideRegisterForm() {
+        console.log('hideRegisterForm() called');
         elements.newRegisterForm.classList.add('hidden');
-        elements.registerForm.hora_inicio.removeEventListener('change', calculateBlockTime);
-        elements.registerForm.hora_finalizacion.removeEventListener('change', calculateBlockTime);
+        state.editMode = false;
+        state.editItemId = null;
+        elements.registerForm.reset();
+        if (elements.registerForm.hora_inicio) elements.registerForm.hora_inicio.removeEventListener('change', calculateBlockTime);
+        if (elements.registerForm.hora_finalizacion) elements.registerForm.hora_finalizacion.removeEventListener('change', calculateBlockTime);
+        if (elements.registerForm.fecha) elements.registerForm.fecha.removeEventListener('change', calculateBlockTime);
+        if (elements.registerForm.fecha_finalizacion) elements.registerForm.fecha_finalizacion.removeEventListener('change', calculateBlockTime);
     }
 
-    function handleFormSubmit(e) {
+    // Función para calcular el tiempo total del bloqueo (formulario principal)
+    function calculateBlockTime() {
+        const fechaInicio = elements.registerForm.fecha.value; // Usar fecha de inicio del formulario
+        const startTime = elements.registerForm.hora_inicio.value;
+        const fechaFin = elements.registerForm.fecha_finalizacion.value; // Usar fecha de finalización del formulario
+        const endTime = elements.registerForm.hora_finalizacion.value;
+        const tiempoTotalBloqueoInput = elements.registerForm.tiempo_total_bloqueo;
+
+        // Llamar a la función auxiliar que maneja fechas completas
+        tiempoTotalBloqueoInput.value = calculateBlockTimeFromDates(
+            fechaInicio, startTime,
+            fechaFin, endTime
+        );
+    }
+
+    async function handleFormSubmit(e) {
         e.preventDefault();
+        console.log('handleFormSubmit: Formulario enviado. (Paso 1)');
+        console.log('handleFormSubmit: state.editMode =', state.editMode);
+        console.log('handleFormSubmit: state.editItemId =', state.editItemId);
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('No está autenticado. Por favor, inicia sesión.');
+            window.location.href = '../login.html';
+            return;
+        }
+
         const formData = new FormData(elements.registerForm);
-        
-        const newEntry = {
-            item: state.editMode ? state.editItem : state.itemCounter++,
+        const protestaData = {
             fecha: formData.get('fecha'),
-            tipo_protesta: formData.get('tipo_protesta'),
-            vias: formData.get('vias'),
-            sector_bloqueo: formData.get('sector_bloqueo'),
-            motivo_protesta: formData.get('motivo_protesta'),
-            generador_protesta: formData.get('generador_protesta'),
-            hora_inicio: formData.get('hora_inicio'),
-            hora_finalizacion: formData.get('hora_finalizacion'),
-            tiempo_total_bloqueo: formData.get('tiempo_total_bloqueo'),
-            geoposicion: formData.get('geoposicion'),
-            observaciones: formData.get('observaciones')
+            tipo_protesta: formData.get('tipo_protesta').toUpperCase(),
+            vias: formData.get('vias').toUpperCase() || '-',
+            sector_bloqueo: formData.get('sector_bloqueo').toUpperCase() || '-',
+            motivo_protesta: formData.get('motivo_protesta').toUpperCase() || '-',
+            generador_protesta: formData.get('generador_protesta').toUpperCase() || '-',
+            hora_inicio: formData.get('hora_inicio') || '-',
+            hora_finalizacion: formData.get('hora_finalizacion') || '-',
+            fecha_finalizacion: formData.get('fecha_finalizacion') || null, // Incluir fecha_finalizacion
+            tiempo_total_bloqueo: formData.get('tiempo_total_bloqueo') || '-',
+            geoposicion: formData.get('geoposicion').toUpperCase() || '-',
+            observaciones: formData.get('observaciones').toUpperCase() || '-'
         };
 
-        if (state.editMode) {
-            const index = state.protestasData.findIndex(protesta => protesta.item === state.editItem);
-            if (index !== -1) {
-                state.protestasData[index] = newEntry;
-            }
-            state.editMode = false;
-            state.editItem = null;
-        } else {
-            state.protestasData.push(newEntry);
+        console.log('handleFormSubmit: Datos a enviar:', protestaData);
+
+        if (!protestaData.fecha || !protestaData.tipo_protesta) {
+            alert('Por favor, complete los campos obligatorios: Fecha y Tipo de Protesta.');
+            console.error('handleFormSubmit: Campos obligatorios faltantes.');
+            return;
         }
-        renderTable();
-        hideRegisterForm();
-        alert('Registro guardado exitosamente');
+
+        try {
+            let response;
+            const headers = getAuthHeaders();
+
+            if (state.editMode && state.editItemId) {
+                console.log(`handleFormSubmit: Enviando PUT a ${config.apiBaseUrl}/${state.editItemId}`);
+                response = await fetch(`${config.apiBaseUrl}/${state.editItemId}`, {
+                    method: 'PUT',
+                    headers: headers,
+                    body: JSON.stringify(protestaData)
+                });
+            } else {
+                console.log(`handleFormSubmit: Enviando POST a ${config.apiBaseUrl}`);
+                response = await fetch(config.apiBaseUrl, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(protestaData)
+                });
+            }
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                let errorMessage = `Error al ${state.editMode ? 'modificar' : 'guardar'} el registro de protesta: HTTP status ${response.status}`;
+                try {
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = errorData.message || errorMessage;
+                } catch (jsonParseError) {
+                    errorMessage = `Error inesperado del servidor: ${errorText.substring(0, 100)}... (no es JSON válido)`;
+                }
+                console.error('handleFormSubmit: Error en la respuesta del servidor:', errorMessage, response.status, errorText);
+                throw new Error(errorMessage);
+            }
+
+            const result = await response.json();
+            console.log('handleFormSubmit: Respuesta exitosa del servidor:', result);
+
+            alert(`Registro de protesta ${state.editMode ? 'modificado' : 'guardado'} exitosamente.`);
+            hideRegisterForm();
+            await fetchAndRenderTable();
+        } catch (error) {
+            console.error('handleFormSubmit: Error en la solicitud fetch:', error);
+            alert(`Error de conexión con el servidor o al procesar la respuesta: ${error.message}`);
+        }
     }
 
-    // Funciones de tabla y paginación (igual a luces.js)
+    // --- Funciones de Tabla y Datos ---
+    async function fetchAndRenderTable() {
+        console.log('fetchAndRenderTable() called');
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.error('No token found. Cannot fetch data.');
+            elements.tableBody.innerHTML = `<tr><td colspan="14" class="px-6 py-4 text-center text-gray-400">No autenticado. Por favor, inicia sesión.</td></tr>`; // Colspan actualizado
+            return;
+        }
+        try {
+            const headers = getAuthHeaders();
+            const response = await fetch(config.apiBaseUrl, {
+                method: 'GET',
+                headers: headers
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                let errorMessage = `Error al cargar los registros: HTTP status ${response.status}`;
+                try {
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = errorData.message || errorMessage;
+                } catch (jsonParseError) {
+                    errorMessage = `Error inesperado del servidor: ${errorText.substring(0, 100)}... (no es JSON válido)`;
+                }
+                alert(errorMessage);
+                state.protestasData = [];
+                renderTable();
+                return;
+            }
+
+            const data = await response.json();
+            state.protestasData = data.protestas || data;
+
+            state.filteredData = null;
+            state.currentPage = config.defaultPage;
+            renderTable();
+
+        } catch (error) {
+            console.error('Error al cargar los datos de protestas:', error);
+            alert(`No se pudo conectar con el servidor para cargar las protestas: ${error.message}`);
+            state.protestasData = [];
+            renderTable();
+        }
+    }
+
     function renderTable() {
-        const data = state.filteredData || state.protestasData;
+        console.log('renderTable() called');
+        const dataToRender = state.filteredData || state.protestasData;
         const start = (state.currentPage - 1) * config.itemsPerPage;
         const end = start + config.itemsPerPage;
-        const pageData = data.slice(start, end);
+        const pageData = dataToRender.slice(start, end);
 
         elements.tableBody.innerHTML = '';
 
-        if (pageData.length === 0 && data.length === 0) {
-            showNoDataMessage();
-        } else {
+        if (pageData.length === 0 && dataToRender.length === 0) {
+            showNoDataMessage(true);
+        } else if (pageData.length === 0 && dataToRender.length > 0) {
+            showNoDataMessage(false);
+        }
+        else {
             renderTableRows(pageData);
         }
 
-        updateUI(data, end);
+        updateUI(dataToRender, end);
     }
 
-    function showNoDataMessage() {
+    function showNoDataMessage(isTotalEmpty) {
+        let message = isTotalEmpty
+            ? 'No hay registros disponibles. Agregue un nuevo registro.'
+            : 'No se encontraron resultados para su búsqueda.';
         elements.tableBody.innerHTML = `
             <tr>
-                <td colspan="13" class="px-6 py-4 text-center text-gray-400">
-                    No hay registros disponibles. Agregue un nuevo registro.
+                <td colspan="14" class="px-6 py-4 text-center text-gray-400">
+                    ${message}
                 </td>
             </tr>
-        `;
+        `; // Colspan actualizado
     }
 
     function renderTableRows(data) {
-        data.forEach(protesta => {
+        data.forEach((protesta, index) => {
+            // Formatear la fecha de inicio usando componentes UTC
+            const fechaInicioObj = protesta.fecha ? new Date(protesta.fecha) : null;
+            const formattedFecha = fechaInicioObj ?
+                `${String(fechaInicioObj.getUTCDate()).padStart(2, '0')}/${String(fechaInicioObj.getUTCMonth() + 1).padStart(2, '0')}/${fechaInicioObj.getUTCFullYear()}` : '-';
+
+            // Formatear la fecha de finalización usando componentes UTC
+            const fechaFinalizacionObj = protesta.fecha_finalizacion ? new Date(protesta.fecha_finalizacion) : null;
+            const formattedFechaFinalizacion = fechaFinalizacionObj ?
+                `${String(fechaFinalizacionObj.getUTCDate()).padStart(2, '0')}/${String(fechaFinalizacionObj.getUTCMonth() + 1).padStart(2, '0')}/${fechaFinalizacionObj.getUTCFullYear()}` : '-';
+
             const row = document.createElement('tr');
             row.className = 'hover:bg-white hover:bg-opacity-10';
             row.innerHTML = `
-                <td class="px-4 py-3 text-center">${protesta.item}</td>
-                <td class="px-4 py-3">${protesta.fecha || ''}</td>
-                <td class="px-4 py-3">${protesta.tipo_protesta || ''}</td>
-                <td class="px-4 py-3">${protesta.vias || ''}</td>
-                <td class="px-4 py-3">${protesta.sector_bloqueo || ''}</td>
-                <td class="px-4 py-3">${protesta.motivo_protesta || ''}</td>
-                <td class="px-4 py-3">${protesta.generador_protesta || ''}</td>
-                <td class="px-4 py-3">${protesta.hora_inicio || ''}</td>
-                <td class="px-4 py-3">${protesta.hora_finalizacion || ''}</td>
-                <td class="px-4 py-3">${protesta.tiempo_total_bloqueo || ''}</td>
-                <td class="px-4 py-3">${protesta.geoposicion || ''}</td>
-                <td class="px-4 py-3">${protesta.observaciones || ''}</td>
+                <td class="px-4 py-3 text-center">${index + 1 + ((state.currentPage - 1) * config.itemsPerPage)}</td>
+                <td class="px-4 py-3">${formattedFecha}</td>
+                <td class="px-4 py-3">${protesta.tipo_protesta || '-'}</td>
+                <td class="px-4 py-3">${protesta.vias || '-'}</td>
+                <td class="px-4 py-3">${protesta.sector_bloqueo || '-'}</td>
+                <td class="px-4 py-3">${protesta.motivo_protesta || '-'}</td>
+                <td class="px-4 py-3">${protesta.generador_protesta || '-'}</td>
+                <td class="px-4 py-3">${protesta.hora_inicio || '-'}</td>
+                <td class="px-4 py-3">${protesta.hora_finalizacion || '-'}</td>
+                <td class="px-4 py-3">${formattedFechaFinalizacion}</td>
+                <td class="px-4 py-3">${protesta.tiempo_total_bloqueo || '-'}</td>
+                <td class="px-4 py-3">${protesta.geoposicion || '-'}</td>
+                <td class="px-4 py-3">${protesta.observaciones || '-'}</td>
                 <td class="px-4 py-3 text-center">
-                    <button class="bg-yellow-600 hover:bg-yellow-700 text-white px-2 py-1 rounded edit-btn" data-item="${protesta.item}">Editar</button>
-                    <button class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded delete-btn" data-item="${protesta.item}">Eliminar</button>
+                    <button class="bg-yellow-600 hover:bg-yellow-700 text-white px-2 py-1 rounded edit-btn" data-id="${protesta._id}">Editar</button>
+                    <button class="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded finalizar-btn" data-id="${protesta._id}" data-hora-inicio="${protesta.hora_inicio}" data-fecha-protesta="${protesta.fecha ? new Date(protesta.fecha).toISOString().split('T')[0] : ''}">Finalizar</button>
+                    <button class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded delete-btn" data-id="${protesta._id}">Eliminar</button>
                 </td>
             `;
             elements.tableBody.appendChild(row);
@@ -164,25 +373,23 @@ document.addEventListener('DOMContentLoaded', function() {
         elements.nextPageBtn.disabled = end >= data.length;
     }
 
-    // Funciones de búsqueda (igual a luces.js)
+    // Funciones de búsqueda
     function handleSearch() {
-        const searchTerm = this.value.toLowerCase();
-        
+        const searchTerm = this.value.toUpperCase();
         if (searchTerm === '') {
             state.filteredData = null;
         } else {
-            state.filteredData = state.protestasData.filter(protesta => 
-                Object.values(protesta).some(
-                    value => String(value).toLowerCase().includes(searchTerm)
+            state.filteredData = state.protestasData.filter(protesta =>
+                Object.values(protesta).some(value =>
+                    value !== null && String(value).toUpperCase().includes(searchTerm)
                 )
             );
         }
-        
         state.currentPage = config.defaultPage;
         renderTable();
     }
 
-    // Navegación de páginas (igual a luces.js)
+    // Navegación de páginas
     function goToPrevPage() {
         if (state.currentPage > 1) {
             state.currentPage--;
@@ -193,84 +400,302 @@ document.addEventListener('DOMContentLoaded', function() {
     function goToNextPage() {
         const data = state.filteredData || state.protestasData;
         const totalPages = Math.ceil(data.length / config.itemsPerPage);
-        
+
         if (state.currentPage < totalPages) {
             state.currentPage++;
             renderTable();
         }
     }
 
-    // Exportación de datos (igual a luces.js)
+    // Exportación de datos
     function exportExcel() {
         if (state.protestasData.length === 0) {
             alert('No hay datos para exportar');
             return;
         }
-        const headers = Object.keys(state.protestasData[0]);
-        const data = state.protestasData.map(protesta => headers.map(header => protesta[header]));
+
+        const exportableData = state.protestasData.map(item => {
+            const newItem = { ...item };
+            delete newItem._id;
+            delete newItem.__v;
+
+            // Formatear fechas para Excel usando componentes UTC
+            const fechaInicioExcel = newItem.fecha ? new Date(newItem.fecha) : null;
+            newItem.fecha = fechaInicioExcel ?
+                `${String(fechaInicioExcel.getUTCDate()).padStart(2, '0')}/${String(fechaInicioExcel.getUTCMonth() + 1).padStart(2, '0')}/${fechaInicioExcel.getUTCFullYear()}` : '-';
+
+            const fechaFinalizacionExcel = newItem.fecha_finalizacion ? new Date(newItem.fecha_finalizacion) : null;
+            newItem.fecha_finalizacion = fechaFinalizacionExcel ?
+                `${String(fechaFinalizacionExcel.getUTCDate()).padStart(2, '0')}/${String(fechaFinalizacionExcel.getUTCMonth() + 1).padStart(2, '0')}/${fechaFinalizacionExcel.getUTCFullYear()}` : '-';
+
+            return newItem;
+        });
+
+        const headers = [
+            'fecha', 'tipo_protesta', 'vias', 'sector_bloqueo', 'motivo_protesta',
+            'generador_protesta', 'hora_inicio', 'hora_finalizacion', 'fecha_finalizacion',
+            'tiempo_total_bloqueo', 'geoposicion', 'observaciones'
+        ];
+
+        const data = exportableData.map(protesta =>
+            headers.map(header => protesta[header] || '-')
+        );
+
         const workbook = XLSX.utils.book_new();
         const worksheet = XLSX.utils.aoa_to_sheet([headers, ...data]);
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Registro");
-        XLSX.writeFile(workbook, "sistema_protestas.xlsx");
-        alert('Datos exportados a Excel correctamente');
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Registro_Protestas");
+        XLSX.writeFile(workbook, "registros_protestas.xlsx");
+        alert('Datos exportados a Excel correctamente.');
     }
 
     function handleTableClick(e) {
+        const itemId = e.target.dataset.id;
+        if (!itemId) return;
+
         if (e.target.classList.contains('edit-btn')) {
-            handleEdit(e);
+            handleEdit(itemId);
+        } else if (e.target.classList.contains('finalizar-btn')) {
+            const horaInicio = e.target.dataset.horaInicio;
+            const fechaProtesta = e.target.dataset.fechaProtesta; // Fecha de inicio de la protesta (YYYY-MM-DD)
+            showFinalizarProtestaModal(itemId, horaInicio, fechaProtesta);
         } else if (e.target.classList.contains('delete-btn')) {
-            handleDelete(e);
+            handleDelete(itemId);
         }
     }
 
-    function handleEdit(e) {
+    async function handleEdit(itemId) {
         state.editMode = true;
-        state.editItem = parseInt(e.target.dataset.item);
-        const protesta = state.protestasData.find(p => p.item === state.editItem);
-        if (protesta) {
-            elements.registerForm.fecha.value = protesta.fecha;
-            elements.registerForm.tipo_protesta.value = protesta.tipo_protesta;
-            elements.registerForm.vias.value = protesta.vias;
-            elements.registerForm.sector_bloqueo.value = protesta.sector_bloqueo;
-            elements.registerForm.motivo_protesta.value = protesta.motivo_protesta;
-            elements.registerForm.generador_protesta.value = protesta.generador_protesta;
-            elements.registerForm.hora_inicio.value = protesta.hora_inicio;
-            elements.registerForm.hora_finalizacion.value = protesta.hora_finalizacion;
-            elements.registerForm.tiempo_total_bloqueo.value = protesta.tiempo_total_bloqueo;
-            elements.registerForm.geoposicion.value = protesta.geoposicion;
-            elements.registerForm.observaciones.value = protesta.observaciones;
-            showRegisterForm();
-        }
-    }
+        state.editItemId = itemId;
+        console.log('handleEdit: Setting editMode = true, editItemId =', state.editItemId);
 
-    function handleDelete(e) {
-        if (e.target.classList.contains('delete-btn')) {
-            const item = parseInt(e.target.dataset.item);
-            if (confirm('¿Está seguro de que desea eliminar este registro?')) {
-                state.protestasData = state.protestasData.filter(protesta => protesta.item !== item);
-                renderTable();
+        try {
+            const headers = getAuthHeaders();
+            const response = await fetch(`${config.apiBaseUrl}/${itemId}`, {
+                method: 'GET',
+                headers: headers
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                let errorMessage = `Error al cargar datos para edición: HTTP status ${response.status}`;
+                try {
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = errorData.message || errorMessage;
+                } catch (jsonParseError) {
+                    errorMessage = `Error inesperado del servidor al cargar edición: ${errorText.substring(0, 100)}... (no es JSON válido)`;
+                }
+                throw new Error(errorMessage);
             }
+
+            const protesta = await response.json();
+            console.log('Datos de protesta para edición cargados:', protesta);
+
+            if (protesta) {
+                // Formatear la fecha de inicio para el input type="date"
+                elements.registerForm.fecha.value = protesta.fecha ? new Date(protesta.fecha).toISOString().split('T')[0] : '';
+                elements.registerForm.tipo_protesta.value = protesta.tipo_protesta || '';
+                elements.registerForm.vias.value = protesta.vias || '';
+                elements.registerForm.sector_bloqueo.value = protesta.sector_bloqueo || '';
+                elements.registerForm.motivo_protesta.value = protesta.motivo_protesta || '';
+                elements.registerForm.generador_protesta.value = protesta.generador_protesta || '';
+                elements.registerForm.hora_inicio.value = protesta.hora_inicio || '';
+                elements.registerForm.hora_finalizacion.value = protesta.hora_finalizacion || '';
+                // Cargar fecha de finalización para el input type="date"
+                elements.registerForm.fecha_finalizacion.value = protesta.fecha_finalizacion ? new Date(protesta.fecha_finalizacion).toISOString().split('T')[0] : '';
+                elements.registerForm.tiempo_total_bloqueo.value = protesta.tiempo_total_bloqueo || '';
+                elements.registerForm.geoposicion.value = protesta.geoposicion || '';
+                elements.registerForm.observaciones.value = protesta.observaciones || '';
+
+                calculateBlockTime(); // Recalcular el tiempo de bloqueo después de cargar los datos
+                showRegisterForm(); // Mostrar el formulario con los datos cargados
+            }
+        } catch (error) {
+            console.error('Error al cargar datos para edición:', error);
+            alert(`Error de conexión con el servidor o al cargar datos para edición: ${error.message}`);
         }
     }
 
-    // Función para calcular el tiempo total del bloqueo
-    function calculateBlockTime() {
-        const startTime = elements.registerForm.hora_inicio.value;
-        const endTime = elements.registerForm.hora_finalizacion.value;
+    async function handleDelete(itemId) {
+        if (!confirm('¿Está seguro de que desea eliminar este registro de protesta?')) {
+            return;
+        }
 
-        if (startTime && endTime) {
-            const start = new Date(`01/01/2000 ${startTime}`);
-            const end = new Date(`01/01/2000 ${endTime}`);
-            const diff = new Date(end - start);
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('No está autenticado. Por favor, inicia sesión.');
+            window.location.href = '../login.html';
+            return;
+        }
 
-            const hours = diff.getUTCHours();
-            const minutes = diff.getUTCMinutes();
-            elements.registerForm.tiempo_total_bloqueo.value = `${hours}h ${minutes}m`;
-        } else {
-            elements.registerForm.tiempo_total_bloqueo.value = '';
+        try {
+            const headers = getAuthHeaders();
+            const response = await fetch(`${config.apiBaseUrl}/${itemId}`, {
+                method: 'DELETE',
+                headers: headers
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                let errorMessage = `Error al eliminar registro: HTTP status ${response.status}`;
+                try {
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = errorData.message || errorMessage;
+                } catch (jsonParseError) {
+                    errorMessage = `Error inesperado del servidor al eliminar: ${errorText.substring(0, 100)}... (no es JSON válido)`;
+                }
+                throw new Error(errorMessage);
+            }
+
+            const result = await response.json();
+            alert('Registro de protesta eliminado exitosamente.');
+            await fetchAndRenderTable();
+        } catch (error) {
+            console.error('Error al eliminar registro:', error);
+            alert(`Error de conexión con el servidor o al eliminar el registro: ${error.message}`);
         }
     }
 
-    // Iniciar aplicación
-    init();
+    // --- Funciones del Modal de Finalizar Protesta ---
+    async function showFinalizarProtestaModal(protestaId, horaInicio, fechaProtesta) {
+        console.log('showFinalizarProtestaModal() called for ID:', protestaId);
+        state.currentProtestaIdToFinalize = protestaId;
+        elements.finalizarProtestaId.value = protestaId;
+        elements.finalizarProtestaHoraInicio.value = horaInicio; // Hora de inicio de la protesta
+        elements.finalizarProtestaFecha.value = fechaProtesta; // Fecha de inicio de la protesta (YYYY-MM-DD)
+
+        // Autocompletar con la hora y fecha actuales
+        const now = new Date();
+        const currentTime = now.toTimeString().split(' ')[0].substring(0, 5); // HH:MM
+        const currentDate = now.toISOString().split('T')[0]; // YYYY-MM-DD
+
+        elements.modalHoraFinalizacion.value = currentTime;
+        elements.modalFechaFinalizacion.value = currentDate;
+
+        // Calcular el tiempo de bloqueo inicial al abrir el modal (si ya hay datos)
+        calculateModalBlockTime();
+
+        elements.finalizarProtestaModal.classList.remove('hidden');
+    }
+
+    function hideFinalizarProtestaModal() {
+        console.log('hideFinalizarProtestaModal() called');
+        elements.finalizarProtestaModal.classList.add('hidden');
+        state.currentProtestaIdToFinalize = null;
+        elements.finalizarProtestaForm.reset();
+    }
+
+    // Función para calcular el tiempo total del bloqueo en el modal
+    function calculateModalBlockTime() {
+        const fechaInicio = elements.finalizarProtestaFecha.value;
+        const horaInicio = elements.finalizarProtestaHoraInicio.value;
+        const fechaFin = elements.modalFechaFinalizacion.value;
+        const horaFin = elements.modalHoraFinalizacion.value;
+
+        const tiempoCalculado = calculateBlockTimeFromDates(
+            fechaInicio, horaInicio,
+            fechaFin, horaFin
+        );
+        console.log(`Tiempo calculado en modal: ${tiempoCalculado}`);
+        return tiempoCalculado;
+    }
+
+    async function handleFinalizarProtestaSubmit(e) {
+        e.preventDefault();
+        console.log('handleFinalizarProtestaSubmit: Formulario de finalización enviado.');
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('No está autenticado. Por favor, inicia sesión.');
+            window.location.href = '../login.html';
+            return;
+        }
+
+        const protestaId = elements.finalizarProtestaId.value;
+        const horaFinalizacion = elements.modalHoraFinalizacion.value;
+        const fechaFinalizacion = elements.modalFechaFinalizacion.value;
+        const horaInicioOriginal = elements.finalizarProtestaHoraInicio.value;
+        const fechaProtestaOriginal = elements.finalizarProtestaFecha.value;
+
+
+        if (!horaFinalizacion || !fechaFinalizacion) {
+            alert('Por favor, complete la hora y fecha de finalización.');
+            return;
+        }
+
+        // Recalcular el tiempo total del bloqueo usando las horas y fechas originales y las de finalización del modal
+        const tiempoTotalBloqueoCalculado = calculateBlockTimeFromDates(
+            fechaProtestaOriginal, horaInicioOriginal,
+            fechaFinalizacion, horaFinalizacion
+        );
+
+
+        const updateData = {
+            hora_finalizacion: horaFinalizacion,
+            fecha_finalizacion: fechaFinalizacion, // Enviar la fecha de finalización
+            tiempo_total_bloqueo: tiempoTotalBloqueoCalculado
+        };
+
+        console.log('Finalizar Protesta Data to send:', updateData);
+
+        try {
+            const headers = getAuthHeaders();
+            const response = await fetch(`${config.apiBaseUrl}/${protestaId}/finalizar`, {
+                method: 'PUT',
+                headers: headers,
+                body: JSON.stringify(updateData)
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                let errorMessage = `Error al finalizar protesta: HTTP status ${response.status}`;
+                try {
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = errorData.message || errorMessage;
+                } catch (jsonParseError) {
+                    errorMessage = `Error inesperado del servidor al finalizar: ${errorText.substring(0, 100)}... (no es JSON válido)`;
+                }
+                console.error('handleFinalizarProtestaSubmit: Error en la respuesta del servidor:', errorMessage, response.status, errorText);
+                throw new Error(errorMessage);
+            }
+
+            const result = await response.json();
+            console.log('Protesta finalizada exitosamente:', result);
+            alert('Protesta finalizada exitosamente.');
+
+            hideFinalizarProtestaModal();
+            await fetchAndRenderTable(); // Recargar la tabla para mostrar los cambios
+        } catch (error) {
+            console.error('Error al finalizar protesta:', error);
+            alert(`Error de conexión con el servidor o al finalizar la protesta: ${error.message}`);
+        }
+    }
+
+    // Nueva función auxiliar para calcular tiempo total de bloqueo con fechas completas
+    function calculateBlockTimeFromDates(startDateStr, startTimeStr, endDateStr, endTimeStr) {
+        if (!startDateStr || !startTimeStr || !endDateStr || !endTimeStr) {
+            return '-';
+        }
+
+        // Construir objetos Date en la zona horaria local para la comparación y cálculo
+        // Es importante que todos los Date se construyan de la misma manera para evitar desfases.
+        const startDateTime = new Date(`${startDateStr}T${startTimeStr}:00`);
+        let endDateTime = new Date(`${endDateStr}T${endTimeStr}:00`);
+
+        // Si la hora de finalización es anterior a la de inicio, y es el mismo día,
+        // significa que cruzó la medianoche. Sumar un día a la fecha de finalización.
+        if (endDateTime < startDateTime && startDateStr === endDateStr) {
+            endDateTime.setDate(endDateTime.getDate() + 1);
+        }
+
+        const diffMs = endDateTime - startDateTime;
+        const diffMinutes = Math.floor(diffMs / (1000 * 60));
+
+        const hours = Math.floor(diffMinutes / 60);
+        const minutes = diffMinutes % 60;
+
+        return `${hours}h ${minutes}m`;
+    }
+
+
+    init(); // Iniciar la aplicación
 });

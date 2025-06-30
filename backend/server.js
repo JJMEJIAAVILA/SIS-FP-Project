@@ -1,4 +1,4 @@
-// SIS-FP/backend/server.js - Versión Corregida y Optimizada
+// SIS-FP/backend/server.js - Versión Corregida (Eliminada la re-compilación del modelo User)
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -9,32 +9,22 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Importar la función 'protect' desde authMiddleware
-const { protect } = require('./middleware/authMiddleware');
+// Importar la función 'protect' y 'authorizeRoles' desde authMiddleware
+const { protect, authorizeRoles } = require('./middleware/authMiddleware');
+
+// Importar el modelo de Usuario (AHORA SOLO SE IMPORTA, NO SE DEFINE AQUÍ)
+const User = require('./models/User'); // <--- ¡CAMBIO CLAVE AQUÍ!
 
 // Middleware
 app.use(cors()); // Habilita CORS para permitir peticiones desde el frontend
 app.use(express.json()); // Habilita el parsing de JSON en el cuerpo de las peticiones
 
-// --- Configuración de la base de datos MongoDB y Modelo de Usuario ---
+// --- Configuración de la base de datos MongoDB ---
 const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/sis_fp_db';
 
 mongoose.connect(mongoUri)
     .then(() => console.log('MongoDB conectado correctamente'))
     .catch(err => console.error('Error al conectar a MongoDB:', err));
-
-// Esquema de Usuario (se mantiene el que tenías)
-const userSchema = new mongoose.Schema({
-    username: { type: String, required: true, unique: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    telefono: { type: String, default: '' },
-    idioma: { type: String, default: 'es' },
-    tema: { type: String, default: 'oscuro' },
-    createdAt: { type: Date, default: Date.now }
-});
-
-const User = mongoose.model('User', userSchema);
 
 // --- Clave Secreta para JWT ---
 const JWT_SECRET = process.env.JWT_SECRET || 'miSuperClaveSecretaParaJWT123!';
@@ -57,15 +47,15 @@ app.post('/api/register', async (req, res) => {
         if (existingUser) {
             return res.status(409).json({ message: 'El nombre de usuario o el correo electrónico ya están registrados.' });
         }
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
+        // La contraseña se hasheará automáticamente por el hook 'pre-save' en el modelo User
         const newUser = new User({
             username,
             email,
-            password: hashedPassword,
+            password,
             telefono: '',
             idioma: 'es',
-            tema: 'oscuro'
+            tema: 'oscuro',
+            role: 'operator' // Por defecto, los registros normales son 'operator'
         });
         await newUser.save();
         res.status(201).json({ message: 'Usuario registrado exitosamente.' });
@@ -82,24 +72,28 @@ app.post('/api/login', async (req, res) => {
         return res.status(400).json({ message: 'Usuario y contraseña son obligatorios.' });
     }
     try {
-        const user = await User.findOne({ username });
+        // Seleccionar la contraseña para poder compararla
+        const user = await User.findOne({ username }).select('+password');
         if (!user) {
             return res.status(401).json({ message: 'Credenciales inválidas.' });
         }
-        const isMatch = await bcrypt.compare(password, user.password);
+        // Usar el método matchPassword del modelo
+        const isMatch = await user.matchPassword(password);
         if (!isMatch) {
             return res.status(401).json({ message: 'Credenciales inválidas.' });
         }
         const payload = {
             id: user._id,
             username: user.username,
-            email: user.email
+            email: user.email,
+            role: user.role // Incluir el rol en el token
         };
         const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' }); // Token expira en 1 hora
         res.status(200).json({
             message: 'Inicio de sesión exitoso.',
             token,
-            username: user.username // También enviamos el username para el frontend
+            username: user.username, // También enviamos el username para el frontend
+            role: user.role // También enviamos el rol para el frontend
         });
     } catch (error) {
         console.error('Error en el login:', error);
@@ -130,7 +124,8 @@ app.get('/api/user/profile', protect, async (req, res) => {
             email: user.email,
             telefono: user.telefono,
             idioma: user.idioma,
-            tema: user.tema
+            tema: user.tema,
+            role: user.role // Incluir el rol en el perfil
         });
     } catch (error) {
         console.error('Error al obtener el perfil del usuario:', error);
@@ -143,7 +138,7 @@ app.put('/api/user/profile', protect, async (req, res) => {
     try {
         const userId = req.user.id;
         const { username, email, telefono, password, idioma, tema } = req.body;
-        const user = await User.findById(userId);
+        const user = await User.findById(userId).select('+password'); // Seleccionar password para poder hashear si cambia
         if (!user) {
             return res.status(404).json({ message: 'Usuario no encontrado.' });
         }
@@ -175,29 +170,45 @@ app.put('/api/user/profile', protect, async (req, res) => {
 // --- Importar y usar Rutas Modulares ---
 // IMPORTANTE: DEBEN ESTAR ANTES DE app.use(express.static...);
 
-// Rutas para la gestión de Empresas
-const empresaRoutes = require('./routes/empresas');
-app.use('/api/empresas', empresaRoutes);
-
-// Rutas para la gestión de Vehículos
-const vehiculoRoutes = require('./routes/vehiculos');
-app.use('/api/vehiculos', vehiculoRoutes);
-
-// Rutas para la gestión de Embarcaciones
-const embarcacionesRoutes = require('./routes/embarcacionesRoutes');
-app.use('/api/embarcaciones', embarcacionesRoutes);
-
-// Rutas para la gestión de Antecedentes
+// Rutas para la gestión de Antecedentes (antecedentesRoutes.js)
 const antecedentesRoutes = require('./routes/antecedentesRoutes');
 app.use('/api/antecedentes', antecedentesRoutes);
 
-// Rutas para la gestión de Luces
+// Rutas para la gestión de Cámaras (camarasRoutes.js)
+const camarasRoutes = require('./routes/camarasRoutes');
+app.use('/api/camaras', camarasRoutes);
+
+// Rutas para la gestión de Embarcaciones (embarcacionesRoutes.js)
+const embarcacionesRoutes = require('./routes/embarcacionesRoutes');
+app.use('/api/embarcaciones', embarcacionesRoutes);
+
+// Rutas para la gestión de Empresas (empresas.js)
+const empresaRoutes = require('./routes/empresas');
+app.use('/api/empresas', empresaRoutes);
+
+// Rutas para la gestión de Apoyo de la Fuerza Pública (fuerzaPublicaRoutes.js)
+const fuerzaPublicaRoutes = require('./routes/fuerzaPublicaRoutes');
+app.use('/api/fuerza_publica', fuerzaPublicaRoutes);
+
+// Rutas para la gestión de Luces (lucesRoutes.js)
 const lucesRoutes = require('./routes/lucesRoutes');
 app.use('/api/luces', lucesRoutes);
 
-// Rutas para la gestión de Cámaras (¡CORREGIDO: MOVISTE ESTAS LÍNEAS AL LUGAR CORRECTO!)
-const camarasRoutes = require('./routes/camarasRoutes');
-app.use('/api/camaras', camarasRoutes);
+// Rutas para la gestión de Protestas (protestasRoutes.js)
+const protestasRoutes = require('./routes/protestasRoutes');
+app.use('/api/protestas', protestasRoutes);
+
+// Rutas para la gestión de Vehículos (vehiculos.js)
+const vehiculoRoutes = require('./routes/vehiculos');
+app.use('/api/vehiculos', vehiculoRoutes);
+
+// Rutas para el Dashboard
+const dashboardRoutes = require('./routes/dashboardRoutes');
+app.use('/api/dashboard', dashboardRoutes);
+
+// Rutas para la gestión de usuarios por administradores
+const adminUserRoutes = require('./routes/adminUserRoutes');
+app.use('/api/admin/users', adminUserRoutes);
 
 
 // --- Servir archivos estáticos del frontend ---

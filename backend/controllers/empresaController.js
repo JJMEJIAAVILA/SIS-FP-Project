@@ -1,6 +1,5 @@
 // SIS-FP/backend/controllers/empresaController.js
 const Empresa = require('../models/Empresa');
-console.log('--- Cargando empresaController.js ---'); // Línea de depuración
 
 // @desc    Obtener todas las empresas
 // @route   GET /api/empresas
