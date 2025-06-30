@@ -1,4 +1,4 @@
-// SIS-FP/backend/server.js - Versión Corregida (Eliminada la re-compilación del modelo User)
+// SIS-FP/backend/server.js - Versión Corregida (Eliminada la ruta de registro público)
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -36,6 +36,8 @@ app.get('/', (req, res) => {
     res.send('¡Servidor backend de SIS-FP funcionando!');
 });
 
+// --- RUTA DE REGISTRO PÚBLICO ELIMINADA O COMENTADA PARA MAYOR SEGURIDAD ---
+/*
 // Ruta de registro de usuario
 app.post('/api/register', async (req, res) => {
     const { username, email, password } = req.body;
@@ -64,6 +66,9 @@ app.post('/api/register', async (req, res) => {
         res.status(500).json({ message: 'Error interno del servidor al registrar usuario.' });
     }
 });
+*/
+// --- FIN DE LA RUTA DE REGISTRO PÚBLICO ELIMINADA O COMENTADA ---
+
 
 // Ruta de login de usuario
 app.post('/api/login', async (req, res) => {
