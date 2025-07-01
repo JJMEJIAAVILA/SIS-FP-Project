@@ -102,6 +102,7 @@ header a:hover {
 .kpi-icon.bg-green-500 { background-color: #22c55e; }
 .kpi-icon.bg-purple-500 { background-color: #a855f7; }
 .kpi-icon.bg-yellow-500 { background-color: #f59e0b; } /* Color para Personas Verificadas */
+.kpi-icon.bg-teal-500 { background-color: #14b8a6; } /* NUEVO: Color para Entradas de Personal (Empresas) */
 
 
 .kpi-content {

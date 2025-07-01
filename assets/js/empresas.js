@@ -1,4 +1,5 @@
-// assets/js/empresas.js
+// assets/js/empresas.js - ACTUALIZADO para autocompletar fecha/hora, usar IDs y corregir problema de zona horaria
+
 document.addEventListener('DOMContentLoaded', () => {
     // --- Initial User Display Setup ---
     const userDisplayElement = document.getElementById('userDisplay');
@@ -44,8 +45,90 @@ document.addEventListener('DOMContentLoaded', () => {
         // Elementos del modal de salida
         salidaForm: document.getElementById('salidaForm'),
         salidaRegistroForm: document.getElementById('salidaRegistroForm'),
-        cancelSalidaBtn: document.getElementById('cancelSalidaBtn')
+        cancelSalidaBtn: document.getElementById('cancelSalidaBtn'),
+
+        // --- ELEMENTOS DE FECHA Y HORA POR ID ---
+        fechaEntradaInput: document.getElementById('fechaEntradaEmpresa'),
+        horaEntradaInput: document.getElementById('horaEntradaEmpresa'),
+        fechaSalidaModalInput: document.getElementById('fechaSalidaEmpresaModal'),
+        horaSalidaModalInput: document.getElementById('horaSalidaEmpresaModal')
     };
+
+    // --- Funciones Auxiliares para Fecha y Hora ---
+    function getCurrentDate() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0'); // Meses son 0-11
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function getCurrentTime() {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        return `${hours}:${minutes}`;
+    }
+
+    // --- Funciones de UI (MOVIDAS ARRIBA PARA ASEGURAR DEFINICIÓN) ---
+    function updateUI(data, end) {
+        elements.currentRecordsSpan.textContent = data.length;
+        elements.currentPageSpan.textContent = state.currentPage;
+        elements.prevPageBtn.disabled = state.currentPage === 1;
+        elements.nextPageBtn.disabled = end >= data.length;
+    }
+
+    function showNoDataMessage(isTotalEmpty) {
+        let message = isTotalEmpty
+            ? 'No hay registros disponibles. Agregue un nuevo registro.'
+            : 'No se encontraron resultados para su búsqueda.';
+        elements.tableBody.innerHTML = `
+            <tr>
+                <td colspan="16" class="px-6 py-4 text-center text-gray-400"> <!-- Colspan corregido a 16 -->
+                    ${message}
+                </td>
+            </tr>
+        `;
+    }
+
+    function renderTableRows(data) {
+        data.forEach((empresa, index) => {
+            // Formatear fechas y horas para visualización
+            // IMPORTANTE: Asegúrate de que fecha_entrada y fecha_salida sean objetos Date válidos
+            // Si son ISO strings del backend, new Date() los parseará correctamente.
+            const formattedFechaEntrada = empresa.fecha_entrada ? new Date(empresa.fecha_entrada).toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '-';
+            const formattedHoraEntrada = empresa.hora_entrada || '-';
+
+            const formattedFechaSalida = empresa.fecha_salida ? new Date(empresa.fecha_salida).toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '-';
+            const formattedHoraSalida = empresa.hora_salida || '-';
+
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-white hover:bg-opacity-10';
+            row.innerHTML = `
+                <td class="px-4 py-3 text-center">${index + 1 + ((state.currentPage - 1) * config.itemsPerPage)}</td>
+                <td class="px-4 py-3 text-center">${formattedFechaEntrada}</td>
+                <td class="px-4 py-3 text-center">${formattedHoraEntrada}</td>
+                <td class="px-4 py-3 text-center">${formattedFechaSalida}</td>
+                <td class="px-4 py-3 text-center">${formattedHoraSalida}</td>
+                <td class="px-4 py-3">${empresa.nombre_empresa || '-'}</td>
+                <td class="px-4 py-3 text-center">${empresa.identificacion || '-'}</td>
+                <td class="px-4 py-3 text-center">${empresa.area_ingreso || '-'}</td>
+                <td class="px-4 py-3">${empresa.empresa || '-'}</td>
+                <td class="px-4 py-3 text-center">${empresa.carne || '-'}</td>
+                <td class="px-4 py-3 text-center">${empresa.tipo_empresa || '-'}</td>
+                <td class="px-4 py-3 text-center">${empresa.dependencia || '-'}</td>
+                <td class="px-4 py-3 text-center">${empresa.dispositivo || '-'}</td>
+                <td class="px-4 py-3 text-center">${empresa.codigo_dispositivo || '-'}</td>
+                <td class="px-4 py-3">${empresa.observaciones || '-'}</td>
+                <td class="px-4 py-3 text-center">
+                    <button class="bg-yellow-600 hover:bg-yellow-700 text-white px-2 py-1 rounded edit-btn" data-id="${empresa._id}">Editar</button>
+                    <button class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded salida-btn" data-id="${empresa._id}">Salida</button>
+                    <button class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded delete-btn" data-id="${empresa._id}">Eliminar</button>
+                </td>
+            `;
+            elements.tableBody.appendChild(row);
+        });
+    }
 
     // --- Funciones de Inicialización ---
     async function init() {
@@ -110,16 +193,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (state.editMode && state.editItemId) {
             loadEditData(); // Cargar datos si estamos en modo edición
         } else {
-            // Establecer fecha y hora actual por defecto para la entrada
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = (now.getMonth() + 1).toString().padStart(2, '0');
-            const day = now.getDate().toString().padStart(2, '0');
-            const hours = now.getHours().toString().padStart(2, '0');
-            const minutes = now.getMinutes().toString().padStart(2, '0');
-
-            elements.registerForm.fecha_entrada.value = `${year}-${month}-${day}`;
-            elements.registerForm.hora_entrada.value = `${hours}:${minutes}`;
+            // Autocompletar fecha y hora actual para el NUEVO registro
+            if (elements.fechaEntradaInput) {
+                elements.fechaEntradaInput.value = getCurrentDate();
+            }
+            if (elements.horaEntradaInput) {
+                elements.horaEntradaInput.value = getCurrentTime();
+            }
         }
     }
 
@@ -140,8 +220,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const formData = new FormData(elements.registerForm);
+
+        // --- INICIO DE LA CORRECCIÓN DE ZONA HORARIA PARA FECHA DE ENTRADA ---
+        const rawFechaEntrada = formData.get('fecha_entrada'); // "YYYY-MM-DD"
+        let fechaEntradaISO = null;
+        if (rawFechaEntrada) {
+            // Crea un objeto Date en la zona horaria local para el inicio del día
+            const localDate = new Date(`${rawFechaEntrada}T00:00:00`);
+            // Convierte esa fecha local a un ISO string UTC
+            fechaEntradaISO = localDate.toISOString();
+        }
+        // --- FIN DE LA CORRECCIÓN DE ZONA HORARIA ---
+
         const empresaData = {
-            fecha_entrada: formData.get('fecha_entrada'),
+            fecha_entrada: fechaEntradaISO, // Envía la fecha corregida en ISO 8601
             hora_entrada: formData.get('hora_entrada'),
             nombre_empresa: formData.get('nombre_empresa').toUpperCase(),
             identificacion: formData.get('identificacion').toUpperCase(),
@@ -149,7 +241,6 @@ document.addEventListener('DOMContentLoaded', () => {
             empresa: formData.get('empresa').toUpperCase(),
             carne: formData.get('carne').toUpperCase() || '-',
             tipo_empresa: formData.get('tipo_empresa').toUpperCase(),
-            // CAMBIO AQUÍ: 'area' eliminado de los datos enviados
             dependencia: formData.get('dependencia').toUpperCase() || '-',
             dispositivo: formData.get('dispositivo').toUpperCase() || '-',
             codigo_dispositivo: formData.get('codigo_dispositivo').toUpperCase() || '-',
@@ -208,19 +299,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         state.empresaSalidaId = itemId; // Almacenar el ID de la empresa para la salida
 
-        // Autocompletar fecha y hora actuales
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = (now.getMonth() + 1).toString().padStart(2, '0');
-        const day = now.getDate().toString().padStart(2, '0');
-        const hours = now.getHours().toString().padStart(2, '0');
-        const minutes = now.getMinutes().toString().padStart(2, '0');
-
-        if (elements.salidaRegistroForm.fecha_salida) {
-            elements.salidaRegistroForm.fecha_salida.value = `${year}-${month}-${day}`;
+        // Autocompletar fecha y hora actuales para el modal de salida
+        if (elements.fechaSalidaModalInput) {
+            elements.fechaSalidaModalInput.value = getCurrentDate();
         }
-        if (elements.salidaRegistroForm.hora_salida) {
-            elements.salidaRegistroForm.hora_salida.value = `${hours}:${minutes}`;
+        if (elements.horaSalidaModalInput) {
+            elements.horaSalidaModalInput.value = getCurrentTime();
         }
     }
 
@@ -243,10 +327,20 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const fechaSalida = elements.salidaRegistroForm.fecha_salida.value;
-        const horaSalida = elements.salidaRegistroForm.hora_salida.value;
+        // --- INICIO DE LA CORRECCIÓN DE ZONA HORARIA PARA FECHA DE SALIDA ---
+        const rawFechaSalida = elements.fechaSalidaModalInput.value; // "YYYY-MM-DD"
+        let fechaSalidaISO = null;
+        if (rawFechaSalida) {
+            // Crea un objeto Date en la zona horaria local para el inicio del día
+            const localDate = new Date(`${rawFechaSalida}T00:00:00`);
+            // Convierte esa fecha local a un ISO string UTC
+            fechaSalidaISO = localDate.toISOString();
+        }
+        // --- FIN DE LA CORRECCIÓN DE ZONA HORARIA ---
 
-        if (!fechaSalida || !horaSalida) {
+        const horaSalida = elements.horaSalidaModalInput.value;
+
+        if (!fechaSalidaISO || !horaSalida) { // Ahora verificamos fechaSalidaISO
             alert('La fecha y hora de salida son obligatorias.');
             return;
         }
@@ -256,7 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`${config.apiBaseUrl}/${state.empresaSalidaId}/salida`, {
                 method: 'PUT',
                 headers: headers,
-                body: JSON.stringify({ fecha_salida: fechaSalida, hora_salida: horaSalida }) // Enviar fecha y hora separadas
+                body: JSON.stringify({ fecha_salida: fechaSalidaISO, hora_salida: horaSalida }) // Enviar fecha corregida
             });
 
             if (!response.ok) {
@@ -288,8 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const token = localStorage.getItem('token');
         if (!token) {
             console.error('No token found. Cannot fetch data.');
-            // CAMBIO AQUÍ: Colspan ajustado a 16 (antes 17)
-            elements.tableBody.innerHTML = `<tr><td colspan="16" class="px-6 py-4 text-center text-gray-400">No autenticado. Por favor, inicie sesión.</td></tr>`;
+            elements.tableBody.innerHTML = `<tr><td colspan="16" class="px-6 py-4 text-center text-gray-400">No autenticado. Por favor, inicie sesión.</td></tr>`; // Colspan corregido a 16
             return;
         }
         try {
@@ -347,65 +440,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateUI(dataToRender, end);
     }
 
-    function showNoDataMessage(isTotalEmpty) {
-        let message = isTotalEmpty
-            ? 'No hay registros disponibles. Agregue un nuevo registro.'
-            : 'No se encontraron resultados para su búsqueda.';
-        // CAMBIO AQUÍ: Colspan ajustado a 16 (antes 17)
-        elements.tableBody.innerHTML = `
-            <tr>
-                <td colspan="16" class="px-6 py-4 text-center text-gray-400">
-                    ${message}
-                </td>
-            </tr>
-        `;
-    }
-
-    function renderTableRows(data) {
-        data.forEach((empresa, index) => {
-            // Formatear fechas y horas para visualización
-            const formattedFechaEntrada = empresa.fecha_entrada ? new Date(empresa.fecha_entrada).toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '-';
-            const formattedHoraEntrada = empresa.hora_entrada || '-';
-
-            const formattedFechaSalida = empresa.fecha_salida ? new Date(empresa.fecha_salida).toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '-';
-            const formattedHoraSalida = empresa.hora_salida || '-';
-
-            const row = document.createElement('tr');
-            row.className = 'hover:bg-white hover:bg-opacity-10';
-            row.innerHTML = `
-                <td class="px-4 py-3 text-center">${index + 1 + ((state.currentPage - 1) * config.itemsPerPage)}</td>
-                <td class="px-4 py-3 text-center">${formattedFechaEntrada}</td>
-                <td class="px-4 py-3 text-center">${formattedHoraEntrada}</td>
-                <td class="px-4 py-3 text-center">${formattedFechaSalida}</td>
-                <td class="px-4 py-3 text-center">${formattedHoraSalida}</td>
-                <td class="px-4 py-3">${empresa.nombre_empresa || '-'}</td>
-                <td class="px-4 py-3 text-center">${empresa.identificacion || '-'}</td>
-                <td class="px-4 py-3 text-center">${empresa.area_ingreso || '-'}</td>
-                <td class="px-4 py-3">${empresa.empresa || '-'}</td>
-                <td class="px-4 py-3 text-center">${empresa.carne || '-'}</td>
-                <td class="px-4 py-3 text-center">${empresa.tipo_empresa || '-'}</td>
-                <!-- CAMBIO AQUÍ: Columna 'ÁREA' eliminada de la fila de la tabla -->
-                <td class="px-4 py-3 text-center">${empresa.dependencia || '-'}</td>
-                <td class="px-4 py-3 text-center">${empresa.dispositivo || '-'}</td>
-                <td class="px-4 py-3 text-center">${empresa.codigo_dispositivo || '-'}</td>
-                <td class="px-4 py-3">${empresa.observaciones || '-'}</td>
-                <td class="px-4 py-3 text-center">
-                    <button class="bg-yellow-600 hover:bg-yellow-700 text-white px-2 py-1 rounded edit-btn" data-id="${empresa._id}">Editar</button>
-                    <button class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded salida-btn" data-id="${empresa._id}">Salida</button>
-                    <button class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded delete-btn" data-id="${empresa._id}">Eliminar</button>
-                </td>
-            `;
-            elements.tableBody.appendChild(row);
-        });
-    }
-
-    function updateUI(data, end) {
-        elements.currentRecordsSpan.textContent = data.length;
-        elements.currentPageSpan.textContent = state.currentPage;
-        elements.prevPageBtn.disabled = state.currentPage === 1;
-        elements.nextPageBtn.disabled = end >= data.length;
-    }
-
     function handleSearch() {
         const searchTerm = this.value.toUpperCase();
         if (searchTerm === '') {
@@ -450,6 +484,7 @@ document.addEventListener('DOMContentLoaded', () => {
             delete newItem.__v;
 
             // Formatear fechas y horas para Excel
+            // Asegúrate de que las fechas sean objetos Date válidos antes de formatear
             newItem.fecha_entrada = newItem.fecha_entrada ? new Date(newItem.fecha_entrada).toLocaleDateString('es-ES') : '';
             newItem.hora_entrada = newItem.hora_entrada || '';
             newItem.fecha_salida = newItem.fecha_salida ? new Date(newItem.fecha_salida).toLocaleDateString('es-ES') : '';
@@ -458,11 +493,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return newItem;
         });
 
-        // CAMBIO AQUÍ: Definir el orden manual de las columnas para el Excel de empresas (sin 'area')
         const headers = [
             'fecha_entrada', 'hora_entrada', 'fecha_salida', 'hora_salida',
             'nombre_empresa', 'identificacion', 'area_ingreso', 'empresa', 'carne',
-            'tipo_empresa', // 'area' eliminado
+            'tipo_empresa',
             'dependencia', 'dispositivo', 'codigo_dispositivo',
             'observaciones'
         ];
@@ -544,9 +578,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const empresa = state.empresasData.find(p => p._id === state.editItemId);
         if (empresa) {
             // Rellenar el formulario con los datos de la empresa
-            // Formatear la fecha para input type="date"
-            elements.registerForm.fecha_entrada.value = empresa.fecha_entrada ? new Date(empresa.fecha_entrada).toISOString().split('T')[0] : '';
-            elements.registerForm.hora_entrada.value = empresa.hora_entrada || '';
+            // Formatear la fecha de entrada para input type="date"
+            // Asegúrate de que empresa.fecha_entrada sea un Date o ISO string válido
+            elements.fechaEntradaInput.value = empresa.fecha_entrada ? new Date(empresa.fecha_entrada).toISOString().split('T')[0] : '';
+            elements.horaEntradaInput.value = empresa.hora_entrada || '';
 
             elements.registerForm.nombre_empresa.value = empresa.nombre_empresa || '';
             elements.registerForm.identificacion.value = empresa.identificacion || '';
@@ -554,11 +589,20 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.registerForm.empresa.value = empresa.empresa || '';
             elements.registerForm.carne.value = empresa.carne || '';
             elements.registerForm.tipo_empresa.value = empresa.tipo_empresa || '';
-            // CAMBIO AQUÍ: No intentar cargar el valor de 'area'
             elements.registerForm.dependencia.value = empresa.dependencia || '';
             elements.registerForm.dispositivo.value = empresa.dispositivo || '';
             elements.registerForm.codigo_dispositivo.value = empresa.codigo_dispositivo || '';
             elements.registerForm.observaciones.value = empresa.observaciones || '';
+
+            // Si hay fecha y hora de salida en el registro, también rellenarlas en el formulario principal
+            // (Esto asume que el formulario principal tiene campos para fecha_salida y hora_salida para edición)
+            // Si no, estos campos solo se manejarán en el modal de salida.
+            if (elements.registerForm.fecha_salida && empresa.fecha_salida) {
+                elements.registerForm.fecha_salida.value = new Date(empresa.fecha_salida).toISOString().split('T')[0];
+            }
+            if (elements.registerForm.hora_salida && empresa.hora_salida) {
+                elements.registerForm.hora_salida.value = empresa.hora_salida;
+            }
         }
     }
 

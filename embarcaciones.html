@@ -6,8 +6,9 @@
     <title>SIS-FP - Registro de Embarcaciones</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="stylesheet" href="./assets/css/global.css">
-    <link rel="stylesheet" href="./assets/css/embarcaciones.css">
+    <link rel="stylesheet" href="assets/css/global.css">
+    <link rel="stylesheet" href="assets/css/embarcaciones.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body class="text-white">
 <div class="container mx-auto p-4 relative z-10">
@@ -23,7 +24,7 @@
 
     <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
         <div class="relative flex-grow max-w-md">
-            <input type="text" id="searchInput" placeholder="Buscar embarcación..." class="w-full px-4 py-2 rounded text-black">
+            <input type="text" id="searchInput" placeholder="BUSCAR EMBARCACIÓN..." class="w-full px-4 py-2 rounded text-black uppercase">
             <i class="fas fa-search absolute right-3 top-3 text-gray-500"></i>
         </div>
         <div class="flex space-x-2">
@@ -37,56 +38,66 @@
     </div>
 
     <div id="newRegisterForm" class="bg-white bg-opacity-20 p-4 rounded-lg mb-6 hidden">
-        <h2 class="text-xl font-bold mb-4">Nuevo Registro de Embarcación</h2>
+        <h2 class="text-xl font-bold mb-4">NUEVO REGISTRO DE EMBARCACIÓN</h2>
         <form id="registerForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
-                <label class="block mb-1 text-white">Fecha de Registro</label>
-                <input type="date" id="fechaRegistro" name="fechaRegistro" class="w-full px-4 py-2 rounded text-black" required>
+                <label class="block mb-1">FECHA DE REGISTRO*</label>
+                <input type="date" id="fechaRegistroEmbarcacion" name="fechaRegistro" class="w-full px-4 py-2 rounded text-black" required readonly>
             </div>
             <div>
-                <label class="block mb-1 text-white">Nombre del Piloto</label>
-                <input type="text" name="piloto" class="w-full px-4 py-2 rounded text-black" required>
+                <label class="block mb-1">NOMBRE DEL PILOTO*</label>
+                <input type="text" name="piloto" class="w-full px-4 py-2 rounded text-black uppercase" required>
             </div>
             <div>
-                <label class="block mb-1 text-white">Nombre de la Embarcación</label>
-                <input type="text" name="nombre_embarcacion" class="w-full px-4 py-2 rounded text-black" required>
+                <label class="block mb-1">NOMBRE DE LA EMBARCACIÓN*</label>
+                <input type="text" name="nombre_embarcacion" class="w-full px-4 py-2 rounded text-black uppercase" required>
             </div>
             <div>
-                <label class="block mb-1 text-white">Tipo de Embarcación</label>
-                <input type="text" name="tipo_embarcacion" class="w-full px-4 py-2 rounded text-black">
+                <label class="block mb-1">TIPO DE EMBARCACIÓN*</label>
+                <input type="text" name="tipo_embarcacion" class="w-full px-4 py-2 rounded text-black uppercase" required>
             </div>
             <div>
-                <label class="block mb-1 text-white">Hora de Arribo</label>
-                <input type="time" name="hora_entrada" class="w-full px-4 py-2 rounded text-black">
+                <label class="block mb-1">HORA DE ARRIBO</label>
+                <input type="time" id="horaEntradaEmbarcacion" name="hora_entrada" class="w-full px-4 py-2 rounded text-black">
             </div>
             <div>
-                <label class="block mb-1 text-white">Observaciones</label>
-                <textarea name="observaciones" class="w-full px-4 py-2 rounded text-black"></textarea>
+                <label class="block mb-1">OBSERVACIONES</label>
+                <textarea name="observaciones" class="w-full px-4 py-2 rounded text-black uppercase" rows="2"></textarea>
             </div>
-            <div class="flex items-end space-x-2 mt-4 col-span-1 md:col-span-2 lg:col-span-3">
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Guardar</button>
-                <button type="button" id="cancelFormBtn" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">Cancelar</button>
+            <div class="flex items-end space-x-2">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                    GUARDAR
+                </button>
+                <button type="button" id="cancelFormBtn" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
+                    CANCELAR
+                </button>
             </div>
         </form>
     </div>
 
     <div id="salidaForm" class="bg-white bg-opacity-20 p-4 rounded-lg mb-6 hidden">
-        <h2 class="text-xl font-bold mb-4">Registrar Zarpe de Embarcación</h2>
+        <h2 class="text-xl font-bold mb-4">REGISTRAR SALIDA DE EMBARCACIÓN</h2>
         <form id="salidaRegistroForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="hidden" id="salidaEmbarcacionId" name="salidaEmbarcacionId"> <div>
-            <label class="block mb-1 text-white">Hora de Zarpe</label>
-            <input type="time" name="hora_salida" class="w-full px-4 py-2 rounded text-black" required>
-        </div>
+            <input type="hidden" id="salidaEmbarcacionId" name="salidaEmbarcacionId">
             <div>
-                <label class="block mb-1 text-white">Fecha de Zarpe</label>
-                <input type="date" name="fecha_salida" class="w-full px-4 py-2 rounded text-black" required>
+                <label class="block mb-1">FECHA DE SALIDA*</label>
+                <input type="date" id="fechaSalidaEmbarcacionModal" name="fecha_salida" class="w-full px-4 py-2 rounded text-black" required>
             </div>
-            <div class="flex items-end space-x-2 mt-4 col-span-1 md:col-span-2">
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Registrar Zarpe</button>
-                <button type="button" id="cancelSalidaBtn" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">Cancelar</button>
+            <div>
+                <label class="block mb-1">HORA DE SALIDA*</label>
+                <input type="time" id="horaSalidaEmbarcacionModal" name="hora_salida" class="w-full px-4 py-2 rounded text-black" required>
+            </div>
+            <div class="flex items-end space-x-2">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                    REGISTRAR SALIDA
+                </button>
+                <button type="button" id="cancelSalidaBtn" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
+                    CANCELAR
+                </button>
             </div>
         </form>
     </div>
+
 
     <div class="bg-white bg-opacity-10 rounded-lg overflow-hidden">
         <div class="overflow-x-auto">
@@ -94,7 +105,7 @@
                 <thead class="bg-blue-600">
                 <tr>
                     <th class="px-4 py-3 text-center">ITEM</th>
-                    <th class="px-4 py-3 text-center">FECHA</th>
+                    <th class="px-4 py-3 text-center">FECHA REGISTRO</th>
                     <th class="px-4 py-3 text-center">NOMBRE DEL PILOTO</th>
                     <th class="px-4 py-3 text-center">NOMBRE DE LA EMBARCACIÓN</th>
                     <th class="px-4 py-3 text-center">TIPO DE EMBARCACIÓN</th>
@@ -105,21 +116,26 @@
                     <th class="px-4 py-3 text-center">ACCIÓN</th>
                 </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-700" id="tableBody"></tbody>
+                <tbody class="divide-y divide-gray-700" id="tableBody">
+                </tbody>
             </table>
         </div>
         <div class="px-6 py-4 flex items-center justify-between border-t border-gray-700">
-            <div class="text-sm text-gray-400">Mostrando <span id="currentRecords">0</span> registros</div>
+            <div class="text-sm text-gray-400">
+                Mostrando <span id="currentRecords">0</span> registros
+            </div>
             <div class="flex space-x-2">
-                <button class="px-3 py-1 rounded bg-blue-600 text-white disabled:opacity-50" id="prevPageBtn" disabled><i class="fas fa-chevron-left"></i></button>
+                <button class="px-3 py-1 rounded bg-blue-600 text-white disabled:opacity-50" id="prevPageBtn" disabled>
+                    <i class="fas fa-chevron-left"></i>
+                </button>
                 <span id="currentPage" class="px-3 py-1 rounded bg-blue-600 text-white">1</span>
-                <button class="px-3 py-1 rounded bg-white bg-opacity-10 hover:bg-opacity-20" id="nextPageBtn"><i class="fas fa-chevron-right"></i></button>
+                <button class="px-3 py-1 rounded bg-white bg-opacity-10 hover:bg-opacity-20" id="nextPageBtn">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
             </div>
         </div>
     </div>
 </div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
-<script src="./assets/js/embarcaciones.js"></script>
+<script src="assets/js/embarcaciones.js"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-// assets/js/embarcaciones.js
+// assets/js/embarcaciones.js - CÓDIGO COMPLETO Y ACTUALIZADO (Julio 2025) - SOLUCIÓN DE FECHAS
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM Content Loaded for embarcaciones.js'); // Debug: Confirm script loads
 
@@ -32,8 +32,30 @@ document.addEventListener('DOMContentLoaded', function() {
         userDisplay: document.getElementById('userDisplay'),
         salidaForm: document.getElementById('salidaForm'), // Formulario de salida (asumiendo que existe en embarcaciones.html)
         salidaRegistroForm: document.getElementById('salidaRegistroForm'), // Formulario de salida (asumiendo que existe)
-        cancelSalidaBtn: document.getElementById('cancelSalidaBtn') // Botón cancelar salida (asumiendo que existe)
+        cancelSalidaBtn: document.getElementById('cancelSalidaBtn'), // Botón cancelar salida (asumiendo que existe)
+
+        // --- ELEMENTOS DE FECHA Y HORA POR ID (Asegúrate de que estos IDs existan en embarcaciones.html) ---
+        fechaRegistroEmbarcacionInput: document.getElementById('fechaRegistroEmbarcacion'),
+        horaEntradaEmbarcacionInput: document.getElementById('horaEntradaEmbarcacion'),
+        fechaSalidaEmbarcacionModalInput: document.getElementById('fechaSalidaEmbarcacionModal'),
+        horaSalidaEmbarcacionModalInput: document.getElementById('horaSalidaEmbarcacionModal')
     };
+
+    // --- Funciones Auxiliares para Fecha y Hora ---
+    function getCurrentDate() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0'); // Meses son 0-11
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`; // Formato YYYY-MM-DD
+    }
+
+    function getCurrentTime() {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        return `${hours}:${minutes}`; // Formato HH:MM
+    }
 
     // --- Funciones de Inicialización ---
     async function init() {
@@ -145,12 +167,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (state.editMode && state.editItemId) {
             loadEditData(); // Cargar datos si estamos en modo edición
         } else {
-            // Asegurarse de que el campo de fechaRegistro tenga la fecha actual por defecto
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = (now.getMonth() + 1).toString().padStart(2, '0');
-            const day = now.getDate().toString().padStart(2, '0');
-            elements.registerForm.fechaRegistro.value = `${year}-${month}-${day}`;
+            // Autocompletar fecha y hora actual para el NUEVO registro
+            if (elements.fechaRegistroEmbarcacionInput) {
+                elements.fechaRegistroEmbarcacionInput.value = getCurrentDate();
+            }
+            if (elements.horaEntradaEmbarcacionInput) {
+                elements.horaEntradaEmbarcacionInput.value = getCurrentTime();
+            }
         }
     }
 
@@ -168,20 +191,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const token = localStorage.getItem('token');
         if (!token) {
-            alert('No está autenticado. Por favor, inicia sesión.');
+            alert('No está autenticado. Por favor, inicie sesión.');
             window.location.href = '../login.html';
             console.log('handleFormSubmit: No token found, redirecting.'); // DEBUG
             return;
         }
 
         const formData = new FormData(elements.registerForm);
+
+        // --- INICIO DE LA CORRECCIÓN DE ZONA HORARIA PARA FECHA DE REGISTRO (SOLUCIÓN EMPRESAS/VEHICULOS) ---
+        const rawFechaRegistro = elements.fechaRegistroEmbarcacionInput.value; // "YYYY-MM-DD"
+        let fechaRegistroISO = null;
+        if (rawFechaRegistro) {
+            // Crear un objeto Date en la zona horaria LOCAL para el inicio del día
+            const localDate = new Date(`${rawFechaRegistro}T00:00:00`);
+            // Convertir esa fecha local a un ISO string UTC
+            fechaRegistroISO = localDate.toISOString();
+        }
+        console.log('handleFormSubmit: Fecha de Registro ISO a enviar:', fechaRegistroISO); // DEBUG: Mostrar la fecha ISO
+        // --- FIN DE LA CORRECCIÓN DE ZONA HORARIA ---
+
         // Crear un objeto con los datos del formulario de embarcación
         const embarcacionData = {
-            fechaRegistro: formData.get('fechaRegistro'),
-            // CAMBIO CLAVE AQUÍ: Ahora se envía como 'piloto' para que coincida con el modelo
-            piloto: formData.get('piloto').toUpperCase(), // <-- CORREGIDO: Usa el 'name="piloto"' del HTML
+            fechaRegistro: fechaRegistroISO, // <-- AHORA SE ENVÍA LA FECHA ISO CORREGIDA
+            piloto: formData.get('piloto').toUpperCase(),
             nombre_embarcacion: formData.get('nombre_embarcacion').toUpperCase(),
-            // El campo 'identificacion' no existe en el modelo, así que lo eliminamos de aquí
             tipo_embarcacion: formData.get('tipo_embarcacion').toUpperCase(),
             hora_entrada: formData.get('hora_entrada') || '-',
             observaciones: formData.get('observaciones').toUpperCase() || '-'
@@ -190,7 +224,6 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('handleFormSubmit: Datos a enviar:', embarcacionData); // DEBUG: Mostrar los datos que se van a enviar
 
         // Validaciones básicas antes de enviar (puedes añadir más si es necesario)
-        // CAMBIO AQUÍ: La validación ahora busca 'piloto' en lugar de 'identificacion'
         if (!embarcacionData.fechaRegistro || !embarcacionData.piloto || !embarcacionData.nombre_embarcacion || !embarcacionData.tipo_embarcacion || !embarcacionData.hora_entrada) {
             alert('Por favor, complete todos los campos obligatorios: Fecha de Registro, Nombre del Piloto, Nombre de la Embarcación, Tipo de Embarcación, Hora de Arribo.');
             console.error('handleFormSubmit: Campos obligatorios faltantes.'); // DEBUG: Registrar error de validación
@@ -255,19 +288,11 @@ document.addEventListener('DOMContentLoaded', function() {
         state.embarcacionSalidaId = itemId; // Almacenar el ID de la embarcación para la salida
 
         // Autocompletar fecha y hora actuales
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = (now.getMonth() + 1).toString().padStart(2, '0');
-        const day = now.getDate().toString().padStart(2, '0');
-        const hours = now.getHours().toString().padStart(2, '0');
-        const minutes = now.getMinutes().toString().padStart(2, '0');
-
-        // Asumiendo que fecha_salida es un input type="date" y hora_salida es input type="time"
-        if (elements.salidaRegistroForm.fecha_salida) {
-            elements.salidaRegistroForm.fecha_salida.value = `${year}-${month}-${day}`;
+        if (elements.fechaSalidaEmbarcacionModalInput) {
+            elements.fechaSalidaEmbarcacionModalInput.value = getCurrentDate();
         }
-        if (elements.salidaRegistroForm.hora_salida) {
-            elements.salidaRegistroForm.hora_salida.value = `${hours}:${minutes}`;
+        if (elements.horaSalidaEmbarcacionModalInput) {
+            elements.horaSalidaEmbarcacionModalInput.value = getCurrentTime();
         }
     }
 
@@ -285,15 +310,25 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         const token = localStorage.getItem('token');
         if (!token) {
-            alert('No está autenticado. Por favor, inicia sesión.');
+            alert('No está autenticado. Por favor, inicie sesión.');
             window.location.href = '../login.html';
             return;
         }
 
-        const fechaSalida = elements.salidaRegistroForm.fecha_salida.value;
-        const horaSalida = elements.salidaRegistroForm.hora_salida.value;
+        // --- INICIO DE LA CORRECCIÓN DE ZONA HORARIA PARA FECHA DE SALIDA ---
+        const rawFechaSalida = elements.fechaSalidaEmbarcacionModalInput.value; // "YYYY-MM-DD"
+        let fechaSalidaISO = null;
+        if (rawFechaSalida) {
+            // Crear un objeto Date en la zona horaria LOCAL
+            const localDate = new Date(`${rawFechaSalida}T00:00:00`);
+            fechaSalidaISO = localDate.toISOString();
+        }
+        console.log('handleSalidaSubmit: Fecha de Salida ISO a enviar:', fechaSalidaISO); // DEBUG: Mostrar la fecha ISO
+        // --- FIN DE LA CORRECCIÓN DE ZONA HORARIA ---
 
-        if (!fechaSalida || !horaSalida) {
+        const horaSalida = elements.horaSalidaEmbarcacionModalInput.value;
+
+        if (!fechaSalidaISO || !horaSalida) {
             alert('La fecha y hora de salida son obligatorias.');
             return;
         }
@@ -303,7 +338,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await fetch(`${config.apiBaseUrl}/${state.embarcacionSalidaId}/salida`, {
                 method: 'PUT',
                 headers: headers,
-                body: JSON.stringify({ fecha_salida: fechaSalida, hora_salida: horaSalida })
+                body: JSON.stringify({ fecha_salida: fechaSalidaISO, hora_salida: horaSalida }) // Enviar fecha corregida
             });
 
             if (!response.ok) {
@@ -361,6 +396,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const data = await response.json();
+            console.log('Datos de embarcaciones recibidos del backend:', data); // DEBUG
 
             // *** IMPORTANTE: Ajusta esto según la respuesta REAL de tu API de embarcaciones ***
             // Si tu backend devuelve { embarcaciones: [...] }, usa data.embarcaciones
@@ -413,11 +449,24 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderTableRows(data) {
         data.forEach((embarcacion, index) => {
             // Formatear fechas y horas para visualización
-            const formattedFechaRegistro = embarcacion.fechaRegistro ? new Date(embarcacion.fechaRegistro).toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '-';
+            // Asegurarse de que fechaRegistro sea un objeto Date válido o ISO string
+            let formattedFechaRegistro = '-';
+            if (embarcacion.fechaRegistro) {
+                const dateRegistro = new Date(embarcacion.fechaRegistro);
+                if (!isNaN(dateRegistro.getTime())) { // Verificar si la fecha es válida
+                    formattedFechaRegistro = dateRegistro.toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' });
+                }
+            }
             const formattedHoraEntrada = embarcacion.hora_entrada || '-';
 
             // Si fecha_salida es un Date object del backend, formatéalo. Si es string, úsalo.
-            const formattedFechaSalida = embarcacion.fecha_salida ? new Date(embarcacion.fecha_salida).toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '-';
+            let formattedFechaSalida = '-';
+            if (embarcacion.fecha_salida) {
+                const dateSalida = new Date(embarcacion.fecha_salida);
+                if (!isNaN(dateSalida.getTime())) { // Verificar si la fecha es válida
+                    formattedFechaSalida = dateSalida.toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' });
+                }
+            }
             const formattedHoraSalida = embarcacion.hora_salida || '-';
 
 
@@ -426,7 +475,7 @@ document.addEventListener('DOMContentLoaded', function() {
             row.innerHTML = `
                 <td class="px-4 py-3 text-center">${index + 1 + ((state.currentPage - 1) * config.itemsPerPage)}</td>
                 <td class="px-4 py-3 text-center">${formattedFechaRegistro}</td>
-                <td class="px-4 py-3">${embarcacion.piloto || '-'}</td> <!-- CAMBIO AQUÍ: Mostrar 'piloto' -->
+                <td class="px-4 py-3">${embarcacion.piloto || '-'}</td>
                 <td class="px-4 py-3 text-center">${embarcacion.nombre_embarcacion || '-'}</td>
                 <td class="px-4 py-3 text-center">${embarcacion.tipo_embarcacion || '-'}</td>
                 <td class="px-4 py-3 text-center">${formattedHoraEntrada}</td>
@@ -504,7 +553,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Define el orden manual de las columnas para el archivo Excel
         const headers = [
-            'fechaRegistro', 'piloto', 'nombre_embarcacion', 'tipo_embarcacion', // CAMBIO AQUÍ: 'piloto' en lugar de 'identificacion'
+            'fechaRegistro', 'piloto', 'nombre_embarcacion', 'tipo_embarcacion',
             'hora_entrada', 'hora_salida', 'fecha_salida', 'observaciones'
         ];
 
@@ -585,14 +634,36 @@ document.addEventListener('DOMContentLoaded', function() {
         const embarcacion = state.embarcacionesData.find(p => p._id === state.editItemId);
         if (embarcacion) {
             // Rellenar el formulario con los datos de la embarcación
-            elements.registerForm.fechaRegistro.value = embarcacion.fechaRegistro ? new Date(embarcacion.fechaRegistro).toISOString().split('T')[0] : '';
-            // CAMBIO CLAVE AQUÍ: Cargar 'piloto' del backend en el campo 'piloto' del formulario
-            elements.registerForm.piloto.value = embarcacion.piloto || ''; // <-- CORREGIDO
+            // Asegurarse de que fechaRegistro sea un Date object o ISO string válido
+            if (embarcacion.fechaRegistro) {
+                const dateRegistro = new Date(embarcacion.fechaRegistro);
+                if (!isNaN(dateRegistro.getTime())) {
+                    elements.fechaRegistroEmbarcacionInput.value = dateRegistro.toISOString().split('T')[0];
+                } else {
+                    elements.fechaRegistroEmbarcacionInput.value = '';
+                }
+            } else {
+                elements.fechaRegistroEmbarcacionInput.value = '';
+            }
+
+            elements.registerForm.piloto.value = embarcacion.piloto || '';
             elements.registerForm.nombre_embarcacion.value = embarcacion.nombre_embarcacion || '';
             elements.registerForm.tipo_embarcacion.value = embarcacion.tipo_embarcacion || '';
-            elements.registerForm.hora_entrada.value = embarcacion.hora_entrada || '';
+            elements.horaEntradaEmbarcacionInput.value = embarcacion.hora_entrada || '';
             elements.registerForm.observaciones.value = embarcacion.observaciones || '';
-            // No cargar hora_salida o fecha_salida en el formulario de entrada
+
+            // Si hay fecha y hora de salida en el registro, también rellenarlas en el modal de salida para edición
+            if (elements.fechaSalidaEmbarcacionModalInput && embarcacion.fecha_salida) {
+                const dateSalida = new Date(embarcacion.fecha_salida);
+                if (!isNaN(dateSalida.getTime())) {
+                    elements.fechaSalidaEmbarcacionModalInput.value = dateSalida.toISOString().split('T')[0];
+                } else {
+                    elements.fechaSalidaEmbarcacionModalInput.value = ''; // Limpiar si es inválida
+                }
+            }
+            if (elements.horaSalidaEmbarcacionModalInput && embarcacion.hora_salida) {
+                elements.horaSalidaEmbarcacionModalInput.value = embarcacion.hora_salida;
+            }
         }
     }
 

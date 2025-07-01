@@ -1,10 +1,10 @@
-// SIS-FP/backend/models/Embarcacion.js
+// SIS-FP/backend/models/Embarcacion.js - ACTUALIZADO para tipos de fecha correctos
 const mongoose = require('mongoose');
 
 const embarcacionSchema = mongoose.Schema(
     {
         fechaRegistro: {
-            type: String, // Formato "YYYY-MM-DD" o "DD/MM/YYYY"
+            type: Date, // CAMBIO CLAVE: Ahora es de tipo Date
             required: [true, 'Por favor, añade una fecha de registro']
         },
         piloto: {
@@ -28,8 +28,8 @@ const embarcacionSchema = mongoose.Schema(
             default: null
         },
         fecha_salida: {
-            type: String, // Para la fecha de zarpe (inicialmente null)
-            default: null
+            type: Date, // CAMBIO CLAVE: Ahora es de tipo Date
+            default: null // Se manejará como null si no se proporciona
         },
         observaciones: {
             type: String,

@@ -1,4 +1,4 @@
-// assets/js/vehiculos.js
+// assets/js/vehiculos.js - CÓDIGO COMPLETO Y ACTUALIZADO (Junio 2025) - SOLUCIÓN EMPRESAS APLICADA
 document.addEventListener('DOMContentLoaded', function() {
     const config = {
         itemsPerPage: 10,
@@ -30,7 +30,13 @@ document.addEventListener('DOMContentLoaded', function() {
         userDisplay: document.getElementById('userDisplay'),
         salidaForm: document.getElementById('salidaForm'), // Formulario de salida
         salidaRegistroForm: document.getElementById('salidaRegistroForm'), // Formulario de salida
-        cancelSalidaBtn: document.getElementById('cancelSalidaBtn') // Botón cancelar salida
+        cancelSalidaBtn: document.getElementById('cancelSalidaBtn'), // Botón cancelar salida
+
+        // --- ELEMENTOS AÑADIDOS POR ID DESDE EL HTML (para autocompletado y edición) ---
+        fechaRegistroVehiculoInput: document.getElementById('fechaRegistroVehiculo'),
+        horaEntradaVehiculoInput: document.getElementById('horaEntradaVehiculo'),
+        fechaSalidaVehiculoModalInput: document.getElementById('fechaSalidaVehiculoModal'),
+        horaSalidaVehiculoModalInput: document.getElementById('horaSalidaVehiculoModal')
     };
 
     // --- Funciones de Inicialización ---
@@ -66,7 +72,24 @@ document.addEventListener('DOMContentLoaded', function() {
         return headers;
     };
 
-    // --- CAMBIO AQUÍ: Nombre de usuario en mayúsculas ---
+    // --- Funciones Auxiliares para Fecha y Hora ---
+    function getCurrentDate() {
+        const today = new Date();
+        // Obtener componentes de fecha en la zona horaria local
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`; // Formato YYYY-MM-DD
+    }
+
+    function getCurrentTime() {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        return `${hours}:${minutes}`; // Formato HH:MM
+    }
+
+    // --- Nombre de usuario en mayúsculas ---
     function loadUser() {
         const storedUsername = localStorage.getItem('username');
         if (storedUsername) {
@@ -107,12 +130,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (state.editMode && state.editItemId) {
             loadEditData(); // Cargar datos si estamos en modo edición
         } else {
-            // Asegurarse de que el campo de fechaRegistro tenga la fecha actual por defecto
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = (now.getMonth() + 1).toString().padStart(2, '0');
-            const day = now.getDate().toString().padStart(2, '0');
-            elements.registerForm.fechaRegistro.value = `${year}-${month}-${day}`;
+            // Autocompletar fecha y hora actual para el NUEVO registro
+            if (elements.fechaRegistroVehiculoInput) {
+                elements.fechaRegistroVehiculoInput.value = getCurrentDate();
+            }
+            if (elements.horaEntradaVehiculoInput) {
+                elements.horaEntradaVehiculoInput.value = getCurrentTime();
+            }
         }
     }
 
@@ -133,8 +157,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const formData = new FormData(elements.registerForm);
+
+        // --- INICIO DE LA CORRECCIÓN DE ZONA HORARIA PARA FECHA DE REGISTRO (SOLUCIÓN EMPRESAS) ---
+        const rawFechaRegistro = elements.fechaRegistroVehiculoInput.value; // "YYYY-MM-DD"
+        let fechaRegistroISO = null;
+        if (rawFechaRegistro) {
+            // Crear un objeto Date en la zona horaria LOCAL para el inicio del día
+            // Esto permite que new Date(string) interprete la fecha en la zona horaria local del navegador.
+            const localDate = new Date(`${rawFechaRegistro}T00:00:00`);
+            // Convierte esa fecha local a un ISO string UTC
+            fechaRegistroISO = localDate.toISOString();
+        }
+        console.log('Frontend enviando fechaRegistroISO:', fechaRegistroISO); // LOGGING CRÍTICO
+        // --- FIN DE LA CORRECCIÓN DE ZONA HORARIA ---
+
         const vehiculoData = {
-            fechaRegistro: formData.get('fechaRegistro'),
+            fechaRegistro: fechaRegistroISO, // Envía la fecha corregida en ISO 8601
             conductor: formData.get('conductor').toUpperCase(),
             empresa: formData.get('empresa').toUpperCase(),
             placa: formData.get('placa').toUpperCase(),
@@ -198,20 +236,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         state.vehiculoSalidaId = itemId; // Almacenar el ID del vehículo para la salida
 
-        // Autocompletar fecha y hora actuales
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = (now.getMonth() + 1).toString().padStart(2, '0');
-        const day = now.getDate().toString().padStart(2, '0');
-        const hours = now.getHours().toString().padStart(2, '0');
-        const minutes = now.getMinutes().toString().padStart(2, '0');
-
-        // Asumiendo que fecha_salida es un input type="date" y hora_salida es input type="time"
-        if (elements.salidaRegistroForm.fecha_salida) {
-            elements.salidaRegistroForm.fecha_salida.value = `${year}-${month}-${day}`;
+        // Autocompletar fecha y hora actuales para el modal de salida
+        if (elements.fechaSalidaVehiculoModalInput) {
+            elements.fechaSalidaVehiculoModalInput.value = getCurrentDate();
         }
-        if (elements.salidaRegistroForm.hora_salida) {
-            elements.salidaRegistroForm.hora_salida.value = `${hours}:${minutes}`;
+        if (elements.horaSalidaVehiculoModalInput) {
+            elements.horaSalidaVehiculoModalInput.value = getCurrentTime();
         }
     }
 
@@ -234,10 +264,19 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        const fechaSalida = elements.salidaRegistroForm.fecha_salida.value;
-        const horaSalida = elements.salidaRegistroForm.hora_salida.value;
+        // --- INICIO DE LA CORRECCIÓN DE ZONA HORARIA PARA FECHA DE SALIDA ---
+        const rawFechaSalida = elements.fechaSalidaVehiculoModalInput.value; // "YYYY-MM-DD"
+        let fechaSalidaISO = null;
+        if (rawFechaSalida) {
+            // Crear un objeto Date en la zona horaria LOCAL
+            const localDate = new Date(`${rawFechaSalida}T00:00:00`);
+            fechaSalidaISO = localDate.toISOString();
+        }
+        // --- FIN DE LA CORRECCIÓN DE ZONA HORARIA ---
 
-        if (!fechaSalida || !horaSalida) {
+        const horaSalida = elements.horaSalidaVehiculoModalInput.value;
+
+        if (!fechaSalidaISO || !horaSalida) {
             alert('La fecha y hora de salida son obligatorias.');
             return;
         }
@@ -248,7 +287,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'PUT',
                 headers: headers,
                 // --- CAMBIO CLAVE AQUÍ: Enviar fecha_salida y hora_salida por separado ---
-                body: JSON.stringify({ fecha_salida: fechaSalida, hora_salida: horaSalida })
+                body: JSON.stringify({ fecha_salida: fechaSalidaISO, hora_salida: horaSalida })
             });
 
             // --- Manejo de errores mejorado ---
@@ -271,7 +310,7 @@ document.addEventListener('DOMContentLoaded', function() {
             await fetchAndRenderTable(); // Recargar la tabla
         } catch (error) {
             console.error('Error al registrar salida:', error);
-            alert(`Error de conexión con el servidor o al procesar la respuesta: ${error.message}`);
+            alert(`Error de conexión con el servidor o al registrar salida: ${error.message}`);
         }
     }
 
@@ -308,11 +347,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const data = await response.json();
+            console.log('Datos de vehículos recibidos del backend:', data); // LOGGING CRÍTICO
 
-            // *** IMPORTANTE: Ajusta esto según la respuesta REAL de tu API de vehículos ***
-            // Si tu backend devuelve { vehiculos: [...] }, usa data.vehiculos
-            // Si tu backend devuelve directamente [...], usa data
-            state.vehiculosData = data.vehiculos || data; // Asume que la respuesta es { vehiculos: [...] } o un array directo
+            // Asume que la respuesta es { vehiculos: [...] } o un array directo
+            state.vehiculosData = data.vehiculos || data;
 
             state.filteredData = null; // Resetear filtro
             state.currentPage = config.defaultPage; // Volver a la primera página
@@ -360,11 +398,25 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderTableRows(data) {
         data.forEach((vehiculo, index) => {
             // Formatear fechas y horas para visualización
-            const formattedFechaRegistro = vehiculo.fechaRegistro ? new Date(vehiculo.fechaRegistro).toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '-';
+            // vehiculo.fechaRegistro es un ISO string del backend (ej. "2025-06-30T00:00:00.000Z")
+            // new Date() lo parseará y toLocaleDateString() lo mostrará en la zona horaria local
+            let formattedFechaRegistro = '-';
+            if (vehiculo.fechaRegistro) {
+                const dateRegistro = new Date(vehiculo.fechaRegistro);
+                if (!isNaN(dateRegistro.getTime())) { // Verificar si la fecha es válida
+                    formattedFechaRegistro = dateRegistro.toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' });
+                }
+            }
             const formattedHoraEntrada = vehiculo.hora_entrada || '-';
 
-            // Si fecha_salida es un Date object del backend, formatéalo. Si es string, úsalo.
-            const formattedFechaSalida = vehiculo.fecha_salida ? new Date(vehiculo.fecha_salida).toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '-';
+            // --- Manejo de fecha_salida para evitar "Invalid Date" y mostrar correctamente ---
+            let formattedFechaSalida = '-';
+            if (vehiculo.fecha_salida) {
+                const dateSalida = new Date(vehiculo.fecha_salida);
+                if (!isNaN(dateSalida.getTime())) { // Verificar si la fecha es válida
+                    formattedFechaSalida = dateSalida.toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' });
+                }
+            }
             const formattedHoraSalida = vehiculo.hora_salida || '-';
 
 
@@ -444,6 +496,7 @@ document.addEventListener('DOMContentLoaded', function() {
             delete newItem.__v;
 
             // Formatear fechas y horas para Excel
+            // Asegúrate de que las fechas sean objetos Date válidos antes de formatear
             newItem.fechaRegistro = newItem.fechaRegistro ? new Date(newItem.fechaRegistro).toLocaleDateString('es-ES') : '';
             newItem.hora_entrada = newItem.hora_entrada || '';
             newItem.fecha_salida = newItem.fecha_salida ? new Date(newItem.fecha_salida).toLocaleDateString('es-ES') : '';
@@ -536,16 +589,39 @@ document.addEventListener('DOMContentLoaded', function() {
         const vehiculo = state.vehiculosData.find(p => p._id === state.editItemId);
         if (vehiculo) {
             // Rellenar el formulario con los datos del vehículo
-            elements.registerForm.fechaRegistro.value = vehiculo.fechaRegistro || '';
+            // vehiculo.fechaRegistro es un ISO string del backend, lo convertimos a YYYY-MM-DD para el input type="date"
+            if (vehiculo.fechaRegistro) {
+                const dateRegistro = new Date(vehiculo.fechaRegistro);
+                if (!isNaN(dateRegistro.getTime())) {
+                    elements.fechaRegistroVehiculoInput.value = dateRegistro.toISOString().split('T')[0];
+                } else {
+                    elements.fechaRegistroVehiculoInput.value = '';
+                }
+            } else {
+                elements.fechaRegistroVehiculoInput.value = '';
+            }
+
             elements.registerForm.conductor.value = vehiculo.conductor || '';
             elements.registerForm.empresa.value = vehiculo.empresa || '';
             elements.registerForm.placa.value = vehiculo.placa || '';
             elements.registerForm.tipo_vehiculo.value = vehiculo.tipo_vehiculo || '';
-            elements.registerForm.hora_entrada.value = vehiculo.hora_entrada || '';
+            elements.horaEntradaVehiculoInput.value = vehiculo.hora_entrada || '';
             elements.registerForm.parqueadero_interno.value = vehiculo.parqueadero_interno || '';
             elements.registerForm.parqueadero_visitantes.value = vehiculo.parqueadero_visitantes || '';
             elements.registerForm.observaciones.value = vehiculo.observaciones || '';
-            // No cargar hora_salida o fecha_salida en el formulario de entrada
+
+            // Si hay fecha y hora de salida en el registro, también rellenarlas en el modal de salida para edición
+            if (elements.fechaSalidaVehiculoModalInput && vehiculo.fecha_salida) {
+                const dateSalida = new Date(vehiculo.fecha_salida);
+                if (!isNaN(dateSalida.getTime())) {
+                    elements.fechaSalidaVehiculoModalInput.value = dateSalida.toISOString().split('T')[0];
+                } else {
+                    elements.fechaSalidaVehiculoModalInput.value = ''; // Limpiar si es inválida
+                }
+            }
+            if (elements.horaSalidaVehiculoModalInput && vehiculo.hora_salida) {
+                elements.horaSalidaVehiculoModalInput.value = vehiculo.hora_salida;
+            }
         }
     }
 

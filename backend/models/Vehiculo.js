@@ -1,9 +1,9 @@
-// SIS-FP/backend/models/Vehiculo.js
+// SIS-FP/backend/models/Vehiculo.js - ACTUALIZADO para tipos de fecha correctos (Junio 2025)
 const mongoose = require('mongoose');
 
 const vehiculoSchema = new mongoose.Schema({
-    fechaRegistro: { // Campo oculto en HTML, se puede generar en el backend o frontend
-        type: String, // Usamos String para flexibilidad, o Date si quieres manejarlo como objeto Date
+    fechaRegistro: {
+        type: Date, // CAMBIO CLAVE: Ahora es de tipo Date
         required: true
     },
     conductor: {
@@ -37,11 +37,11 @@ const vehiculoSchema = new mongoose.Schema({
     },
     hora_salida: {
         type: String,
-        default: '-' // Se actualizará al registrar salida
+        // No necesita default: '-' si es String, pero si se deja sin valor, será null/undefined
     },
     fecha_salida: {
-        type: String,
-        default: '-' // Se actualizará al registrar salida
+        type: Date, // CAMBIO CLAVE: Ahora es de tipo Date
+        // No necesita default: '-' si es Date, se manejará como null si no se proporciona
     },
     parqueadero_interno: {
         type: String,

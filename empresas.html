@@ -40,8 +40,9 @@
     <div id="newRegisterForm" class="bg-white bg-opacity-20 p-4 rounded-lg mb-6 hidden">
         <h2 class="text-xl font-bold mb-4">Nuevo Registro de Empresa</h2>
         <form id="registerForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div><label class="block mb-1">FECHA ENTRADA*</label><input type="date" name="fecha_entrada" class="w-full px-4 py-2 rounded text-black" required></div>
-            <div><label class="block mb-1">HORA ENTRADA*</label><input type="time" name="hora_entrada" class="w-full px-4 py-2 rounded text-black" required></div>
+            <!-- CAMPOS DE FECHA Y HORA DE ENTRADA (CON ID AÑADIDO) -->
+            <div><label class="block mb-1">FECHA ENTRADA*</label><input type="date" id="fechaEntradaEmpresa" name="fecha_entrada" class="w-full px-4 py-2 rounded text-black" required></div>
+            <div><label class="block mb-1">HORA ENTRADA*</label><input type="time" id="horaEntradaEmpresa" name="hora_entrada" class="w-full px-4 py-2 rounded text-black" required></div>
 
             <div><label class="block mb-1">NOMBRE Y APELLIDOS*</label><input type="text" name="nombre_empresa" class="w-full px-4 py-2 rounded text-black uppercase" required></div>
             <div><label class="block mb-1">NÚMERO DE IDENTIFICACIÓN*</label><input type="text" name="identificacion" class="w-full px-4 py-2 rounded text-black uppercase" required></div>
@@ -59,7 +60,6 @@
                     <option value="VISITANTE">VISITANTE</option>
                 </select>
             </div>
-            <!-- CAMBIO AQUÍ: Campo 'ÁREA' eliminado del HTML -->
             <div><label class="block mb-1">DEPENDENCIA</label><input type="text" name="dependencia" class="w-full px-4 py-2 rounded text-black uppercase"></div>
             <div><label class="block mb-1">DISPOSITIVO ELECTRÓNICO</label><input type="text" name="dispositivo" class="w-full px-4 py-2 rounded text-black uppercase"></div>
             <div><label class="block mb-1">CÓDIGO DE DISPOSITIVO</label><input type="text" name="codigo_dispositivo" class="w-full px-4 py-2 rounded text-black uppercase"></div>
@@ -89,7 +89,6 @@
                     <th class="px-4 py-3 text-center">EMPRESA</th>
                     <th class="px-4 py-3 text-center">CARNÉ</th>
                     <th class="px-4 py-3 text-center">TIPO DE EMPRESA</th>
-                    <!-- CAMBIO AQUÍ: Columna 'ÁREA' eliminada de la tabla -->
                     <th class="px-4 py-3 text-center">DEPENDENCIA</th>
                     <th class="px-4 py-3 text-center">DISPOSITIVO ELECTRÓNICO</th>
                     <th class="px-4 py-3 text-center">CÓDIGO DE DISPOSITIVO</th>
@@ -115,8 +114,9 @@
         <div class="bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full text-white">
             <h2 class="text-xl font-bold mb-4">Registrar Salida de Empresa</h2>
             <form id="salidaRegistroForm" class="grid grid-cols-1 gap-4">
-                <div><label class="block mb-1">FECHA SALIDA*</label><input type="date" name="fecha_salida" class="w-full px-4 py-2 rounded text-black" required></div>
-                <div><label class="block mb-1">HORA SALIDA*</label><input type="time" name="hora_salida" class="w-full px-4 py-2 rounded text-black" required></div>
+                <!-- CAMPOS DE FECHA Y HORA DE SALIDA (CON ID AÑADIDO) -->
+                <div><label class="block mb-1">FECHA SALIDA*</label><input type="date" id="fechaSalidaEmpresaModal" name="fecha_salida" class="w-full px-4 py-2 rounded text-black" required></div>
+                <div><label class="block mb-1">HORA SALIDA*</label><input type="time" id="horaSalidaEmpresaModal" name="hora_salida" class="w-full px-4 py-2 rounded text-black" required></div>
                 <div class="flex justify-end space-x-2 mt-4">
                     <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">REGISTRAR SALIDA</button>
                     <button type="button" id="cancelSalidaBtn" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">CANCELAR</button>

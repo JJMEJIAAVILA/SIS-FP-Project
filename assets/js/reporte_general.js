@@ -1,4 +1,5 @@
-// assets/js/reporte_general.js - Dashboard con integración a Backend y filtros dinámicos
+// assets/js/reporte_general.js - Dashboard con integración a Backend y filtros dinámicos (ACTUALIZADO Y CORREGIDO)
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM Content Loaded for reporte_general.js');
 
@@ -8,39 +9,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const elements = {
         userDisplay: document.getElementById('userDisplay'),
-        personalHourChartCtx: document.getElementById('personalHourChart').getContext('2d'),
-        vehicularTypeChartCtx: document.getElementById('vehicularTypeChart').getContext('2d'),
-        embarcacionesTypeChartCtx: document.getElementById('embarcacionesTypeChart').getContext('2d'),
-        protestasMotivoChartCtx: document.getElementById('protestasMotivoChart').getContext('2d'), // Nuevo
-        fuerzaPublicaTypeChartCtx: document.getElementById('fuerzaPublicaTypeChart').getContext('2d'), // Nuevo
+        personalHourChartCtx: document.getElementById('personalHourChart') ? document.getElementById('personalHourChart').getContext('2d') : null,
+        vehicularTypeChartCtx: document.getElementById('vehicularTypeChart') ? document.getElementById('vehicularTypeChart').getContext('2d') : null,
+        embarcacionesTypeChartCtx: document.getElementById('embarcacionesTypeChart') ? document.getElementById('embarcacionesTypeChart').getContext('2d') : null,
+        protestasMotivoChartCtx: document.getElementById('protestasMotivoChart') ? document.getElementById('protestasMotivoChart').getContext('2d') : null,
+        fuerzaPublicaTypeChartCtx: document.getElementById('fuerzaPublicaTypeChart') ? document.getElementById('fuerzaPublicaTypeChart').getContext('2d') : null,
 
         totalProtestas: document.getElementById('totalProtestas'),
         totalFuerzaPublica: document.getElementById('totalFuerzaPublica'),
-        totalPersonasVerificadas: document.getElementById('totalPersonasVerificadas'),
         totalVehiculosRegistrados: document.getElementById('totalVehiculosRegistrados'),
         totalEmbarcacionesRegistradas: document.getElementById('totalEmbarcacionesRegistradas'),
 
-        // Elementos de filtro
-        filterType: document.getElementById('filterType'),
+        // --- KPIs ACTUALIZADOS Y NUEVOS ---
+        totalPersonasVerificadas: document.getElementById('totalPersonasVerificadas'), // Este ID ahora mostrará totalAntecedentes del backend
+        totalEntradasPersonalEmpresas: document.getElementById('totalEntradasPersonalEmpresas'), // NUEVO KPI para empresas
+
+        // Elementos de filtro (usando los IDs de tu HTML original)
+        filterType: document.getElementById('filterType'), // ID del selector de filtro principal
         specificDayContainer: document.getElementById('specificDayContainer'),
         filterDate: document.getElementById('filterDate'), // Input de día específico
         specificMonthContainer: document.getElementById('specificMonthContainer'),
         filterMonth: document.getElementById('filterMonth'), // Input de mes específico
         specificYearContainer: document.getElementById('specificYearContainer'),
         filterYear: document.getElementById('filterYear'), // Input de año específico
-        customRangeContainer: document.getElementById('customRangeContainer'),
+        customRangeContainer: document.getElementById('customRangeContainer'), // Contenedor de rango personalizado
         startDate: document.getElementById('startDate'), // Input de inicio de rango
         endDate: document.getElementById('endDate'), // Input de fin de rango
-        filterVehicleType: document.getElementById('filterVehicleType'),
-        filterBoatType: document.getElementById('filterBoatType'),
+        filterVehicleType: document.getElementById('filterVehicleType'), // Selector de tipo de vehículo
+        filterBoatType: document.getElementById('filterBoatType'), // Selector de tipo de embarcación
         applyFiltersBtn: document.getElementById('applyFiltersBtn')
     };
 
-    let personalHourChart; // Para almacenar la instancia del gráfico y poder destruirla/actualizarla
-    let vehicularTypeChart;
-    let embarcacionesTypeChart;
-    let protestasMotivoChart; // Nuevo
-    let fuerzaPublicaTypeChart; // Nuevo
+    let charts = {}; // Objeto para almacenar instancias de Chart.js
 
     // --- Funciones de Inicialización ---
     async function init() {
@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
         loadUser();
         setupEventListeners();
         // Establecer el filtro por defecto a "Este Mes" y aplicar
-        elements.filterType.value = 'thisMonth';
+        elements.filterType.value = 'thisMonth'; // Asegurarse de que el valor inicial sea 'thisMonth'
         updateFilterVisibility(); // Asegura que los inputs correctos estén visibles
         await fetchAndRenderDashboardData(); // Cargar datos del dashboard al inicio
     }
@@ -113,26 +113,29 @@ document.addEventListener('DOMContentLoaded', function() {
         const filterType = elements.filterType.value;
 
         // Ocultar todos los contenedores de fecha/mes/año/rango
-        elements.specificDayContainer.classList.add('hidden');
-        elements.specificMonthContainer.classList.add('hidden');
-        elements.specificYearContainer.classList.add('hidden');
-        elements.customRangeContainer.classList.add('hidden');
+        // Asegúrate de que estos elementos existan en tu HTML si los usas
+        if (elements.specificDayContainer) elements.specificDayContainer.classList.add('hidden');
+        if (elements.specificMonthContainer) elements.specificMonthContainer.classList.add('hidden');
+        if (elements.specificYearContainer) elements.specificYearContainer.classList.add('hidden');
+        if (elements.customRangeContainer) elements.customRangeContainer.classList.add('hidden');
+
 
         // Mostrar el contenedor relevante según el tipo de filtro
         switch (filterType) {
             case 'specificDay':
-                elements.specificDayContainer.classList.remove('hidden');
+                if (elements.specificDayContainer) elements.specificDayContainer.classList.remove('hidden');
                 break;
             case 'specificMonth':
-                elements.specificMonthContainer.classList.remove('hidden');
+                if (elements.specificMonthContainer) elements.specificMonthContainer.classList.remove('hidden');
                 break;
             case 'specificYear':
-                elements.specificYearContainer.classList.remove('hidden');
+                if (elements.specificYearContainer) elements.specificYearContainer.classList.remove('hidden');
                 break;
-            case 'customRange':
-                elements.customRangeContainer.classList.remove('hidden');
+            case 'customRange': // Usar 'customRange' como en tu HTML
+                if (elements.customRangeContainer) elements.customRangeContainer.classList.remove('hidden');
                 break;
             // Para 'today', 'last7days', 'thisMonth', 'thisYear', no se necesita input específico
+            // Nota: 'month' en tu select es 'thisMonth' en la lógica del backend
         }
     }
 
@@ -161,6 +164,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 startDate = `${sevenDaysAgo.getFullYear()}-${(sevenDaysAgo.getMonth() + 1).toString().padStart(2, '0')}-${sevenDaysAgo.getDate().toString().padStart(2, '0')}`;
                 endDate = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`;
                 break;
+            case 'month': // Este es el valor por defecto en tu HTML, mapea a 'thisMonth' en la lógica
             case 'thisMonth':
                 startDate = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-01`;
                 endDate = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${new Date(currentYear, currentMonth + 1, 0).getDate().toString().padStart(2, '0')}`; // Último día del mes
@@ -188,11 +192,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     endDate = `${specificYearValue}-12-31`;
                 }
                 break;
-            case 'customRange':
+            case 'customRange': // Usar 'customRange' como en tu HTML
                 startDate = elements.startDate.value;
                 endDate = elements.endDate.value;
                 break;
-            default: // Por defecto, si no se selecciona nada o es 'month' (el valor inicial)
+            default: // Fallback, aunque 'month' debería ser el default
                 startDate = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-01`;
                 endDate = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${new Date(currentYear, currentMonth + 1, 0).getDate().toString().padStart(2, '0')}`;
                 break;
@@ -229,14 +233,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (!response.ok) {
                 const errorText = await response.text();
-                let errorMessage = `Error al cargar datos del dashboard: HTTP status ${response.status}`;
+                let errorMessage = `Error al cargar los datos del dashboard: HTTP status ${response.status}`;
                 try {
                     const errorData = JSON.parse(errorText);
                     errorMessage = errorData.message || errorMessage;
                 } catch (jsonParseError) {
                     errorMessage = `Error inesperado del servidor: ${errorText.substring(0, 100)}... (no es JSON válido)`;
                 }
-                throw new Error(errorMessage);
+                alert(errorMessage);
+                return;
             }
 
             const data = await response.json();
@@ -253,18 +258,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function renderDashboard(data) {
         // Destruir gráficos existentes antes de crear nuevos para evitar duplicados
-        if (personalHourChart) personalHourChart.destroy();
-        if (vehicularTypeChart) vehicularTypeChart.destroy();
-        if (embarcacionesTypeChart) embarcacionesTypeChart.destroy();
-        if (protestasMotivoChart) protestasMotivoChart.destroy(); // Nuevo
-        if (fuerzaPublicaTypeChart) fuerzaPublicaTypeChart.destroy(); // Nuevo
+        if (charts.personalHourChart) charts.personalHourChart.destroy();
+        if (charts.vehicularTypeChart) charts.vehicularTypeChart.destroy();
+        if (charts.embarcacionesTypeChart) charts.embarcacionesTypeChart.destroy();
+        if (charts.protestasMotivoChart) charts.protestasMotivoChart.destroy();
+        if (charts.fuerzaPublicaTypeChart) charts.fuerzaPublicaTypeChart.destroy();
 
         // Crear/Actualizar gráficos
-        createPersonalHourChart(data.personalHour || { labels: [], data: [] });
-        createVehicularTypeChart(data.vehicularType || { labels: [], data: [] });
-        createEmbarcacionesTypeChart(data.embarcacionesType || { labels: [], data: [] });
-        createProtestasMotivoChart(data.protestasMotivoChart || { labels: [], data: [] }); // Nuevo
-        createFuerzaPublicaTypeChart(data.fuerzaPublicaTypeChart || { labels: [], data: [] }); // Nuevo
+        charts.personalHourChart = createChart(elements.personalHourChartCtx, data.personalHour || { labels: [], data: [] }, 'bar', 'Ingreso de Personal por Hora');
+        charts.vehicularTypeChart = createChart(elements.vehicularTypeChartCtx, data.vehicularType || { labels: [], data: [] }, 'pie', 'Control Ingreso Vehicular por Tipo');
+        charts.embarcacionesTypeChart = createChart(elements.embarcacionesTypeChartCtx, data.embarcacionesType || { labels: [], data: [] }, 'doughnut', 'Control Ingreso de Embarcaciones por Tipo');
+        charts.protestasMotivoChart = createChart(elements.protestasMotivoChartCtx, data.protestasMotivoChart || { labels: [], data: [] }, 'bar', 'Protestas por Motivo');
+        charts.fuerzaPublicaTypeChart = createChart(elements.fuerzaPublicaTypeChartCtx, data.fuerzaPublicaTypeChart || { labels: [], data: [] }, 'pie', 'Apoyos por Fuerza Pública');
 
         // Mostrar totales
         displayTotals(data.totales || {});
@@ -274,241 +279,89 @@ document.addEventListener('DOMContentLoaded', function() {
         populateSelect('filterBoatType', data.availableBoatTypes || []);
     }
 
-    function createPersonalHourChart(data) {
-        personalHourChart = new Chart(elements.personalHourChartCtx, {
-            type: 'bar',
+    // Función genérica para crear gráficos
+    function createChart(ctx, chartData, type, title) {
+        if (!ctx) {
+            console.warn(`Contexto de gráfico no encontrado para ${title}.`);
+            return null;
+        }
+
+        const labels = chartData.labels || [];
+        const data = chartData.data || [];
+
+        const backgroundColors = [
+            'rgba(255, 99, 132, 0.7)', 'rgba(54, 162, 235, 0.7)', 'rgba(255, 206, 86, 0.7)',
+            'rgba(75, 192, 192, 0.7)', 'rgba(153, 102, 255, 0.7)', 'rgba(255, 159, 64, 0.7)',
+            'rgba(200, 200, 200, 0.7)', 'rgba(100, 140, 250, 0.7)', 'rgba(250, 100, 100, 0.7)',
+            'rgba(140, 250, 100, 0.7)'
+        ];
+        const borderColors = backgroundColors.map(color => color.replace('0.7', '1'));
+
+        return new Chart(ctx, {
+            type: type,
             data: {
-                labels: data.labels,
+                labels: labels,
                 datasets: [{
-                    label: 'Ingreso de Personal',
-                    data: data.data,
-                    backgroundColor: 'rgba(59, 130, 246, 0.7)',
-                    borderColor: 'rgba(59, 130, 246, 1)',
+                    label: title,
+                    data: data,
+                    backgroundColor: backgroundColors.slice(0, labels.length),
+                    borderColor: borderColors.slice(0, labels.length),
                     borderWidth: 1,
-                    borderRadius: 4,
-                    hoverBackgroundColor: 'rgba(59, 130, 246, 0.9)'
+                    borderRadius: type === 'bar' ? 4 : 0, // Aplicar borderRadius solo a barras
+                    hoverBackgroundColor: type === 'bar' ? backgroundColors.map(color => color.replace('0.7', '0.9')).slice(0, labels.length) : undefined
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            color: 'rgba(255, 255, 255, 0.8)'
+                plugins: {
+                    legend: {
+                        position: type === 'pie' || type === 'doughnut' ? 'bottom' : 'top',
+                        labels: {
+                            color: '#fff'
                         }
                     },
-                    x: {
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            color: 'rgba(255, 255, 255, 0.8)'
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        labels: {
-                            color: 'rgba(255, 255, 255, 0.8)'
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    function createVehicularTypeChart(data) {
-        const backgroundColors = [
-            'rgba(239, 68, 68, 0.7)',
-            'rgba(59, 130, 246, 0.7)',
-            'rgba(234, 179, 8, 0.7)',
-            'rgba(16, 185, 129, 0.7)',
-            'rgba(139, 92, 246, 0.7)',
-            'rgba(255, 99, 132, 0.7)',
-            'rgba(75, 192, 192, 0.7)',
-            'rgba(153, 102, 255, 0.7)',
-            'rgba(255, 159, 64, 0.7)'
-        ];
-
-        vehicularTypeChart = new Chart(elements.vehicularTypeChartCtx, {
-            type: 'pie',
-            data: {
-                labels: data.labels,
-                datasets: [{
-                    label: 'Tipos de Vehículos',
-                    data: data.data,
-                    backgroundColor: backgroundColors,
-                    borderColor: 'rgba(255, 255, 255, 0.3)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            color: 'rgba(255, 255, 255, 0.8)'
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    function createEmbarcacionesTypeChart(data) {
-        const backgroundColors = [
-            'rgba(6, 182, 212, 0.7)',
-            'rgba(245, 158, 11, 0.7)',
-            'rgba(236, 72, 153, 0.7)',
-            'rgba(132, 204, 22, 0.7)',
-            'rgba(20, 184, 166, 0.7)',
-            'rgba(54, 162, 235, 0.7)',
-            'rgba(255, 206, 86, 0.7)',
-            'rgba(75, 192, 192, 0.7)',
-            'rgba(153, 102, 255, 0.7)'
-        ];
-
-        embarcacionesTypeChart = new Chart(elements.embarcacionesTypeChartCtx, {
-            type: 'doughnut',
-            data: {
-                labels: data.labels,
-                datasets: [{
-                    label: 'Tipos de Embarcaciones',
-                    data: data.data,
-                    backgroundColor: backgroundColors,
-                    borderColor: 'rgba(255, 255, 255, 0.3)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            color: 'rgba(255, 255, 255, 0.8)'
-                        }
+                    title: {
+                        display: true,
+                        text: title,
+                        color: '#fff'
                     },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                const label = context.label || '';
-                                const value = context.raw || 0;
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = Math.round((value / total) * 100);
-                                return `${label}: ${value} (${percentage}%)`;
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== undefined) { // Para barras
+                                    label += context.parsed.y;
+                                } else if (context.parsed !== undefined) { // Para pie/doughnut
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                    label += `${value} (${percentage}%)`;
+                                }
+                                return label;
                             }
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    // NUEVO: Gráfico de Protestas por Motivo
-    function createProtestasMotivoChart(data) {
-        const backgroundColors = [
-            'rgba(255, 99, 132, 0.7)', // Rojo
-            'rgba(54, 162, 235, 0.7)', // Azul
-            'rgba(255, 206, 86, 0.7)', // Amarillo
-            'rgba(75, 192, 192, 0.7)', // Verde azulado
-            'rgba(153, 102, 255, 0.7)', // Púrpura
-            'rgba(255, 159, 64, 0.7)'  // Naranja
-        ];
-        protestasMotivoChart = new Chart(elements.protestasMotivoChartCtx, {
-            type: 'bar', // O 'pie', 'doughnut'
-            data: {
-                labels: data.labels,
-                datasets: [{
-                    label: 'Protestas por Motivo',
-                    data: data.data,
-                    backgroundColor: backgroundColors,
-                    borderColor: 'rgba(255, 255, 255, 0.3)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            color: 'rgba(255, 255, 255, 0.8)'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            color: 'rgba(255, 255, 255, 0.8)'
                         }
                     }
                 },
-                plugins: {
-                    legend: {
-                        labels: {
-                            color: 'rgba(255, 255, 255, 0.8)'
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    // NUEVO: Gráfico de Apoyos por Fuerza Pública
-    function createFuerzaPublicaTypeChart(data) {
-        const backgroundColors = [
-            'rgba(0, 123, 255, 0.7)', // Azul primario
-            'rgba(40, 167, 69, 0.7)', // Verde
-            'rgba(255, 193, 7, 0.7)', // Amarillo
-            'rgba(220, 53, 69, 0.7)', // Rojo
-            'rgba(108, 117, 125, 0.7)', // Gris
-            'rgba(23, 162, 184, 0.7)' // Cian
-        ];
-        fuerzaPublicaTypeChart = new Chart(elements.fuerzaPublicaTypeChartCtx, {
-            type: 'pie', // O 'bar', 'doughnut'
-            data: {
-                labels: data.labels,
-                datasets: [{
-                    label: 'Apoyos por Fuerza Pública',
-                    data: data.data,
-                    backgroundColor: backgroundColors,
-                    borderColor: 'rgba(255, 255, 255, 0.3)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            color: 'rgba(255, 255, 255, 0.8)'
+                scales: {
+                    x: {
+                        ticks: {
+                            color: '#ccc'
+                        },
+                        grid: {
+                            color: 'rgba(200, 200, 200, 0.1)'
                         }
                     },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const label = context.label || '';
-                                const value = context.raw || 0;
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = Math.round((value / total) * 100);
-                                return `${label}: ${value} (${percentage}%)`;
-                            }
+                    y: {
+                        ticks: {
+                            color: '#ccc',
+                            beginAtZero: true
+                        },
+                        grid: {
+                            color: 'rgba(200, 200, 200, 0.1)'
                         }
                     }
                 }
@@ -516,16 +369,28 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+
+    // --- Funciones para Mostrar Totales ---
     function displayTotals(totales) {
         elements.totalProtestas.textContent = totales.totalProtestas !== undefined ? totales.totalProtestas : '0';
         elements.totalFuerzaPublica.textContent = totales.totalFuerzaPublica !== undefined ? totales.totalFuerzaPublica : '0';
-        elements.totalPersonasVerificadas.textContent = totales.totalPersonasVerificadas !== undefined ? totales.totalPersonasVerificadas : '0';
         elements.totalVehiculosRegistrados.textContent = totales.totalVehiculosRegistrados !== undefined ? totales.totalVehiculosRegistrados : '0';
         elements.totalEmbarcacionesRegistradas.textContent = totales.totalEmbarcacionesRegistradas !== undefined ? totales.totalEmbarcacionesRegistradas : '0';
+
+        // Mapeo de KPI: "Personas Verificadas" ahora usa el total de Antecedentes
+        elements.totalPersonasVerificadas.textContent = totales.totalAntecedentes !== undefined ? totales.totalAntecedentes : '0';
+
+        // NUEVO KPI: "Entradas de Personal (Empresas)"
+        elements.totalEntradasPersonalEmpresas.textContent = totales.totalEntradasPersonalEmpresas !== undefined ? totales.totalEntradasPersonalEmpresas : '0';
     }
 
+    // --- Funciones para Poblar Filtros de Tipo ---
     function populateSelect(selectId, options) {
         const select = document.getElementById(selectId);
+        if (!select) {
+            console.warn(`Selector con ID '${selectId}' no encontrado.`);
+            return;
+        }
         const currentValue = select.value;
 
         select.innerHTML = '<option value="">Todos los tipos</option>';
