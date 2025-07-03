@@ -37,8 +37,8 @@ body {
 /* Header */
 header h1 {
     color: var(--primary-blue);
-    font-size: 2.5rem; /* Título más grande */
     text-shadow: 0 2px 5px rgba(0, 168, 232, 0.3); /* Sombra para el título */
+    /* Eliminamos font-size fijo aquí, ya que se maneja con clases de Tailwind en el HTML */
 }
 
 #userDisplay {
@@ -49,6 +49,7 @@ header h1 {
     padding: 0.6rem 1.2rem;
     border-radius: 9999px;
     box-shadow: var(--shadow-light);
+    /* Eliminamos font-size fijo aquí, ya que se maneja con clases de Tailwind en el HTML */
 }
 
 header a {
@@ -58,6 +59,7 @@ header a {
     border-radius: 10px; /* Más redondeado */
     box-shadow: var(--shadow-light);
     transition: all 0.3s ease;
+    /* Eliminamos font-size fijo aquí, ya que se maneja con clases de Tailwind en el HTML */
 }
 header a:hover {
     background-color: #2d3748;
@@ -91,7 +93,7 @@ header a:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.8rem;
+    font-size: 1.8rem; /* Mantener un tamaño base para el icono */
     color: white;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
@@ -108,18 +110,25 @@ header a:hover {
 .kpi-content {
     display: flex;
     flex-direction: column;
+    flex-grow: 1; /* Permitir que el contenido crezca */
+    flex-shrink: 1; /* Permitir que el contenido se encoja */
+    min-width: 0; /* Necesario para que flex-shrink funcione con texto largo */
 }
 .kpi-label {
-    font-size: 0.9rem;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    /* Eliminamos font-size fijo aquí, ya que se maneja con clases de Tailwind en el HTML */
+    overflow-wrap: break-word; /* Rompe palabras largas */
+    word-break: break-word; /* Rompe palabras largas en cualquier punto */
+    white-space: normal; /* Asegura que el texto se envuelva */
 }
 .kpi-value {
-    font-size: 2.5rem; /* Valor más grande y destacado */
     font-weight: bold;
     color: var(--primary-blue);
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    /* Eliminamos font-size fijo aquí, ya que se maneja con clases de Tailwind en el HTML */
+    white-space: nowrap; /* Mantener el número en una sola línea */
 }
 
 /* General card style for charts and filters */
@@ -131,11 +140,12 @@ header a:hover {
     box-shadow: var(--shadow-light);
 }
 
+/* Títulos dentro de las tarjetas (Filtros, Gráficos) */
 .bg-card h2 {
     color: var(--primary-blue);
-    font-size: 1.6rem; /* Títulos de gráficos y filtros */
     margin-bottom: 1rem;
     text-shadow: 0 1px 2px rgba(0, 168, 232, 0.2);
+    /* Eliminamos font-size fijo aquí, ya que se maneja con clases de Tailwind en el HTML */
 }
 
 /* Input y Select (filtros) */
@@ -145,11 +155,11 @@ header a:hover {
     color: var(--text-light); /* Texto del input en blanco */
     padding: 0.75rem 1rem;
     border-radius: 8px;
-    font-size: 1rem;
     box-sizing: border-box;
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
+    /* Eliminamos font-size fijo aquí, ya que se maneja con clases de Tailwind en el HTML */
 }
 .bg-input::placeholder {
     color: var(--text-muted);
@@ -179,7 +189,6 @@ select {
 .bg-input option {
     background-color: #333 !important; /* Fondo oscuro para las opciones */
     color: white !important; /* Texto blanco para las opciones */
-    /* Puedes añadir más estilos si quieres, por ejemplo, hover */
 }
 
 .bg-input option:hover {
@@ -204,8 +213,9 @@ canvas {
         padding: 2rem;
         margin: 1.5rem auto;
     }
+    /* Eliminamos font-size de h1 aquí, ya que se maneja con clases de Tailwind en el HTML */
     header h1 {
-        font-size: 2rem;
+        /* font-size: 2rem; */
     }
     .kpi-card {
         padding: 1rem;
@@ -216,13 +226,14 @@ canvas {
         height: 40px;
         min-width: 40px;
         min-height: 40px;
-        font-size: 1.5rem;
+        font-size: 1.5rem; /* Icono de KPI más pequeño */
     }
+    /* Eliminamos font-size de kpi-value y kpi-label aquí, ya que se maneja con clases de Tailwind en el HTML */
     .kpi-value {
-        font-size: 2rem;
+        /* font-size: 2rem; */
     }
     .kpi-label {
-        font-size: 0.8rem;
+        /* font-size: 0.8rem; */
     }
     .grid {
         grid-template-columns: 1fr; /* Una columna en pantallas más pequeñas */
@@ -230,8 +241,9 @@ canvas {
     .bg-card {
         padding: 1.2rem;
     }
+    /* Ajustamos el tamaño de h2 en tarjetas para pantallas medianas */
     .bg-card h2 {
-        font-size: 1.4rem;
+        font-size: 1.4rem; /* Un poco más pequeño para tabletas */
     }
 }
 
@@ -240,24 +252,83 @@ canvas {
         padding: 1.5rem;
         margin: 1rem auto;
     }
+    /* Eliminamos font-size de h1 aquí, ya que se maneja con clases de Tailwind en el HTML */
     header h1 {
-        font-size: 1.8rem;
+        /* font-size: 1.8rem; */
     }
     .kpi-card {
         flex-direction: column; /* Apilar icono y contenido en móviles */
         text-align: center;
+        padding: 0.8rem; /* Reducir padding en móviles */
     }
     .kpi-icon {
         margin-bottom: 0.5rem;
-    }
-    .kpi-value {
-        font-size: 1.8rem;
-    }
-    .bg-card h2 {
+        width: 35px; /* Icono aún más pequeño en móviles */
+        height: 35px;
+        min-width: 35px;
+        min-height: 35px;
         font-size: 1.2rem;
+    }
+    /* Eliminamos font-size de kpi-value aquí, ya que se maneja con clases de Tailwind en el HTML */
+    .kpi-value {
+        /* font-size: 1.8rem; */
+    }
+    /* Ajustamos el tamaño de h2 en tarjetas para pantallas pequeñas */
+    .bg-card h2 {
+        font-size: 1rem; /* Más pequeño para móviles */
     }
     .bg-input {
         padding: 0.6rem 0.8rem;
-        font-size: 0.9rem;
+        /* Eliminamos font-size fijo aquí, ya que se maneja con clases de Tailwind en el HTML */
+    }
+}
+
+/* Nuevo breakpoint para pantallas extra-pequeñas (ej. 320px - 480px) */
+/* Esto puede ser útil para teléfonos muy pequeños */
+@media (max-width: 480px) {
+    .container {
+        padding: 0.8rem;
+        margin: 0.5rem auto;
+    }
+    header h1 {
+        font-size: 1.4rem; /* Título aún más pequeño */
+    }
+    #userDisplay {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.7rem;
+    }
+    header a {
+        padding: 0.6rem 1rem;
+        font-size: 0.8rem;
+    }
+    .kpi-card {
+        padding: 0.6rem; /* Padding mínimo para KPI cards */
+        gap: 0.5rem;
+    }
+    .kpi-icon {
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+        min-height: 30px;
+        font-size: 1rem; /* Icono muy pequeño */
+    }
+    .kpi-label {
+        font-size: 0.65rem; /* Label muy pequeño */
+    }
+    .kpi-value {
+        font-size: 1.5rem; /* Valor más pequeño */
+    }
+    .bg-card {
+        padding: 1rem;
+    }
+    .bg-card h2 {
+        font-size: 0.9rem; /* Títulos de gráficos muy pequeños */
+    }
+    .bg-input {
+        padding: 0.5rem 0.7rem;
+        font-size: 0.8rem;
+    }
+    .grid {
+        gap: 0.8rem; /* Reducir el gap de la cuadrícula */
     }
 }

@@ -1,12 +1,13 @@
-// SIS-FP/backend/controllers/empresaController.js
+// SIS-FP/backend/controllers/empresaController.js - CORREGIDO
 const Empresa = require('../models/Empresa');
 
 // @desc    Obtener todas las empresas
 // @route   GET /api/empresas
 // @access  Protected
-const getEmpresas = async (req, res) => { // Línea 15
+const getEmpresas = async (req, res) => {
     try {
-        const empresas = await Empresa.find().sort({ createdAt: -1 }); // Ordenar por fecha de creación más reciente
+        // CAMBIO: Ordenar por fecha de creación más antigua primero (createdAt: 1)
+        const empresas = await Empresa.find().sort({ createdAt: 1 });
         res.status(200).json({ empresas });
     } catch (error) {
         console.error('Error al obtener empresas:', error);
@@ -29,10 +30,10 @@ const createEmpresa = async (req, res) => {
     }
 
     try {
-        const existingEmpresa = await Empresa.findOne({ identificacion });
-        if (existingEmpresa) {
-            return res.status(409).json({ message: `La identificación ${identificacion} ya está registrada.` });
-        }
+        // CAMBIO: Eliminado el check de 'existingEmpresa' para permitir múltiples registros
+        // if (existingEmpresa) {
+        //     return res.status(409).json({ message: `La identificación ${identificacion} ya está registrada.` });
+        // }
 
         const newEmpresa = new Empresa({
             fecha_entrada: new Date(fecha_entrada),
@@ -75,12 +76,14 @@ const updateEmpresa = async (req, res) => {
             return res.status(404).json({ message: 'Registro de empresa no encontrado.' });
         }
 
-        if (identificacion && identificacion.toUpperCase() !== empresaToUpdate.identificacion) {
-            const existingIdentificacion = await Empresa.findOne({ identificacion: identificacion.toUpperCase() });
-            if (existingIdentificacion && String(existingIdentificacion._id) !== id) {
-                return res.status(409).json({ message: `La identificación ${identificacion} ya está registrada en otro registro.` });
-            }
-        }
+        // CAMBIO: Eliminado el check de unicidad para 'identificacion' al actualizar,
+        // ya que la identificación puede repetirse en diferentes registros.
+        // if (identificacion && identificacion.toUpperCase() !== empresaToUpdate.identificacion) {
+        //     const existingIdentificacion = await Empresa.findOne({ identificacion: identificacion.toUpperCase() });
+        //     if (existingIdentificacion && String(existingIdentificacion._id) !== id) {
+        //         return res.status(409).json({ message: `La identificación ${identificacion} ya está registrada en otro registro.` });
+        //     }
+        // }
 
         empresaToUpdate.fecha_entrada = fecha_entrada ? new Date(fecha_entrada) : empresaToUpdate.fecha_entrada;
         empresaToUpdate.hora_entrada = hora_entrada || empresaToUpdate.hora_entrada;

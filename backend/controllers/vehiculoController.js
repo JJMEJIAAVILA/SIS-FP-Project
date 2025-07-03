@@ -1,10 +1,11 @@
-// SIS-FP/backend/controllers/vehiculoController.js
+// SIS-FP/backend/controllers/vehiculoController.js - CORREGIDO
 const Vehiculo = require('../models/Vehiculo');
 
 // Obtener todos los vehículos
 exports.getVehiculos = async (req, res) => {
     try {
-        const vehiculos = await Vehiculo.find().sort({ createdAt: -1 }); // Ordenar por los más recientes
+        // CAMBIO: Ordenar por fecha de creación más antigua primero (createdAt: 1)
+        const vehiculos = await Vehiculo.find().sort({ createdAt: 1 });
         res.status(200).json(vehiculos);
     } catch (error) {
         console.error('Error al obtener vehículos:', error);
@@ -31,12 +32,19 @@ exports.createVehiculo = async (req, res) => {
             return res.status(400).json({ message: 'Faltan campos requeridos para el registro del vehículo.' });
         }
 
-        // Generar fechaRegistro en el backend si no viene del frontend
-        const now = new Date();
-        const fechaRegistro = now.toISOString().split('T')[0] + ' ' + now.toTimeString().split(' ')[0].substring(0, 5); // YYYY-MM-DD HH:MM
+        // CAMBIO: Usar fechaRegistro directamente del body si viene, o generar un Date object si no.
+        // Si el frontend ya envía fechaRegistro como ISO string, Mongoose lo parseará.
+        // Si no viene, usamos la fecha y hora actual como un objeto Date.
+        let fechaRegistro = req.body.fechaRegistro; // Asume que el frontend podría enviarlo
+        if (!fechaRegistro) {
+            fechaRegistro = new Date(); // Genera un objeto Date con la fecha y hora actuales
+        } else {
+            fechaRegistro = new Date(fechaRegistro); // Asegura que sea un objeto Date
+        }
+
 
         const newVehiculo = new Vehiculo({
-            fechaRegistro,
+            fechaRegistro, // Ahora es un objeto Date
             conductor,
             empresa,
             placa,
@@ -51,9 +59,11 @@ exports.createVehiculo = async (req, res) => {
         res.status(201).json({ message: 'Vehículo registrado exitosamente', vehiculo: newVehiculo });
     } catch (error) {
         console.error('Error al crear vehículo:', error);
-        if (error.code === 11000) { // Error de clave duplicada (placa única)
-            return res.status(409).json({ message: 'Ya existe un vehículo con esa placa.' });
-        }
+        // CAMBIO: Eliminado el manejo específico de error 11000 para placa,
+        // ya que ahora se permiten placas duplicadas.
+        // if (error.code === 11000) { // Error de clave duplicada (placa única)
+        //     return res.status(409).json({ message: 'Ya existe un vehículo con esa placa.' });
+        // }
         res.status(500).json({ message: 'Error interno del servidor al crear vehículo.' });
     }
 };
@@ -62,6 +72,11 @@ exports.createVehiculo = async (req, res) => {
 exports.updateVehiculo = async (req, res) => {
     try {
         const { id } = req.params;
+        // CAMBIO: Si fechaRegistro viene en el body, asegúrate de que sea un objeto Date
+        if (req.body.fechaRegistro) {
+            req.body.fechaRegistro = new Date(req.body.fechaRegistro);
+        }
+
         const updatedVehiculo = await Vehiculo.findByIdAndUpdate(id, req.body, { new: true });
 
         if (!updatedVehiculo) {
@@ -70,9 +85,11 @@ exports.updateVehiculo = async (req, res) => {
         res.status(200).json({ message: 'Vehículo actualizado exitosamente', vehiculo: updatedVehiculo });
     } catch (error) {
         console.error('Error al actualizar vehículo:', error);
-        if (error.code === 11000) { // Error de clave duplicada (placa única)
-            return res.status(409).json({ message: 'Ya existe un vehículo con esa placa.' });
-        }
+        // CAMBIO: Eliminado el manejo específico de error 11000 para placa,
+        // ya que ahora se permiten placas duplicadas.
+        // if (error.code === 11000) { // Error de clave duplicada (placa única)
+        //     return res.status(409).json({ message: 'Ya existe un vehículo con esa placa.' });
+        // }
         res.status(500).json({ message: 'Error interno del servidor al actualizar vehículo.' });
     }
 };
@@ -87,9 +104,12 @@ exports.registrarSalidaVehiculo = async (req, res) => {
             return res.status(400).json({ message: 'Hora y Fecha de salida son obligatorias.' });
         }
 
+        // CAMBIO: Asegúrate de que fecha_salida sea un objeto Date
+        const fechaSalidaDate = new Date(fecha_salida);
+
         const updatedVehiculo = await Vehiculo.findByIdAndUpdate(
             id,
-            { hora_salida, fecha_salida },
+            { hora_salida, fecha_salida: fechaSalidaDate },
             { new: true }
         );
 

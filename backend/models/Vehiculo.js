@@ -1,9 +1,9 @@
-// SIS-FP/backend/models/Vehiculo.js - ACTUALIZADO para tipos de fecha correctos (Junio 2025)
+// SIS-FP/backend/models/Vehiculo.js - CORREGIDO: Eliminado unique de placa
 const mongoose = require('mongoose');
 
 const vehiculoSchema = new mongoose.Schema({
     fechaRegistro: {
-        type: Date, // CAMBIO CLAVE: Ahora es de tipo Date
+        type: Date, // Ahora es de tipo Date
         required: true
     },
     conductor: {
@@ -21,7 +21,7 @@ const vehiculoSchema = new mongoose.Schema({
     placa: {
         type: String,
         required: true,
-        unique: true, // La placa suele ser única
+        // Eliminado: unique: true, // ¡ESTO SE ELIMINA PARA PERMITIR MÚLTIPLES REGISTROS!
         uppercase: true,
         trim: true
     },
@@ -40,7 +40,7 @@ const vehiculoSchema = new mongoose.Schema({
         // No necesita default: '-' si es String, pero si se deja sin valor, será null/undefined
     },
     fecha_salida: {
-        type: Date, // CAMBIO CLAVE: Ahora es de tipo Date
+        type: Date, // Ahora es de tipo Date
         // No necesita default: '-' si es Date, se manejará como null si no se proporciona
     },
     parqueadero_interno: {

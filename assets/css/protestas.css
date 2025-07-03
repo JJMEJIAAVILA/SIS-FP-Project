@@ -386,3 +386,28 @@ tr:nth-child(even) {
         font-size: 0.75rem;
     }
 }
+
+/* --- AJUSTES PARA FORZAR LA VISUALIZACIÓN Y COLOR DE LOS ICONOS --- */
+/* Asegura que el icono de "NUEVO REGISTRO" se muestre y sea blanco */
+#newRegisterBtn .fas.fa-plus {
+    display: inline-block !important; /* Fuerza la visualización como bloque en línea */
+    color: white !important; /* Fuerza el color blanco */
+    font-size: 1rem !important; /* Asegura un tamaño estándar */
+    margin-right: 0.5rem; /* Reafirmar el margen si es necesario */
+}
+
+/* Asegura que el icono de "REGRESAR" se muestre y sea blanco */
+header a .fas.fa-arrow-left {
+    display: inline-block !important;
+    color: white !important;
+    font-size: 1rem !important;
+    margin-right: 0.5rem; /* Asegura el margen si lo necesitas, mr-2 de Tailwind ya lo da */
+}
+
+/* Asegura que el icono de "EXPORTAR EXCEL" se muestre y sea blanco */
+#exportExcelBtn .fas.fa-file-excel {
+    display: inline-block !important;
+    color: white !important;
+    font-size: 1rem !important;
+    margin-right: 0.5rem; /* Asegura el margen si lo necesitas, mr-2 de Tailwind ya lo da */
+}

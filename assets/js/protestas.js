@@ -1,4 +1,5 @@
-// assets/js/protestas.js - ACTUALIZADO (Corrección de Fecha de Visualización)
+// assets/js/protestas.js - ACTUALIZADO (Deshabilitar botón Finalizar si la protesta ya está finalizada)
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM Content Loaded for protestas.js');
 
@@ -340,6 +341,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const formattedFechaFinalizacion = fechaFinalizacionObj ?
                 `${String(fechaFinalizacionObj.getUTCDate()).padStart(2, '0')}/${String(fechaFinalizacionObj.getUTCMonth() + 1).padStart(2, '0')}/${fechaFinalizacionObj.getUTCFullYear()}` : '-';
 
+            // Determinar si la protesta ya está finalizada
+            const isFinalized = !!protesta.fecha_finalizacion; // True si fecha_finalizacion no es null/undefined
+
             const row = document.createElement('tr');
             row.className = 'hover:bg-white hover:bg-opacity-10';
             row.innerHTML = `
@@ -358,7 +362,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td class="px-4 py-3">${protesta.observaciones || '-'}</td>
                 <td class="px-4 py-3 text-center">
                     <button class="bg-yellow-600 hover:bg-yellow-700 text-white px-2 py-1 rounded edit-btn" data-id="${protesta._id}">Editar</button>
-                    <button class="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded finalizar-btn" data-id="${protesta._id}" data-hora-inicio="${protesta.hora_inicio}" data-fecha-protesta="${protesta.fecha ? new Date(protesta.fecha).toISOString().split('T')[0] : ''}">Finalizar</button>
+                    ${isFinalized
+                ? `<button class="bg-gray-500 text-white px-2 py-1 rounded cursor-not-allowed" disabled>Finalizado</button>`
+                : `<button class="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded finalizar-btn" data-id="${protesta._id}" data-hora-inicio="${protesta.hora_inicio}" data-fecha-protesta="${protesta.fecha ? new Date(protesta.fecha).toISOString().split('T')[0] : ''}">Finalizar</button>`
+            }
                     <button class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded delete-btn" data-id="${protesta._id}">Eliminar</button>
                 </td>
             `;
@@ -671,31 +678,54 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Nueva función auxiliar para calcular tiempo total de bloqueo con fechas completas
-    function calculateBlockTimeFromDates(startDateStr, startTimeStr, endDateStr, endTimeStr) {
-        if (!startDateStr || !startTimeStr || !endDateStr || !endTimeStr) {
+    function calculateBlockTimeFromDates(fechaInicioStr, horaInicioStr, fechaFinStr, horaFinStr) {
+        if (!fechaInicioStr || !horaInicioStr || !fechaFinStr || !horaFinStr) {
+            return '-'; // Retorna '-' si faltan datos
+        }
+
+        try {
+            // Combinar fecha y hora para crear objetos Date
+            // Importante: Crear las fechas en UTC para evitar problemas de zona horaria
+            const startDateTime = new Date(`${fechaInicioStr}T${horaInicioStr}:00Z`); // 'Z' indica UTC
+            const endDateTime = new Date(`${fechaFinStr}T${horaFinStr}:00Z`); // 'Z' indica UTC
+
+            // Verificar si las fechas son válidas
+            if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
+                console.error('Fechas o horas inválidas para el cálculo del bloqueo.');
+                return '-';
+            }
+
+            // Calcular la diferencia en milisegundos
+            const diffMs = endDateTime.getTime() - startDateTime.getTime();
+
+            if (diffMs < 0) {
+                // Si la hora de finalización es anterior a la de inicio, o la fecha de finalización es anterior
+                return 'Tiempo inválido';
+            }
+
+            // Convertir milisegundos a horas, minutos y segundos
+            const diffSeconds = Math.floor(diffMs / 1000);
+            const hours = Math.floor(diffSeconds / 3600);
+            const minutes = Math.floor((diffSeconds % 3600) / 60);
+            const seconds = diffSeconds % 60;
+
+            let result = '';
+            if (hours > 0) {
+                result += `${hours}h `;
+            }
+            if (minutes > 0) {
+                result += `${minutes}m `;
+            }
+            if (seconds > 0 || (hours === 0 && minutes === 0)) { // Mostrar segundos si no hay horas/minutos
+                result += `${seconds}s`;
+            }
+
+            return result.trim();
+        } catch (error) {
+            console.error('Error al calcular el tiempo de bloqueo:', error);
             return '-';
         }
-
-        // Construir objetos Date en la zona horaria local para la comparación y cálculo
-        // Es importante que todos los Date se construyan de la misma manera para evitar desfases.
-        const startDateTime = new Date(`${startDateStr}T${startTimeStr}:00`);
-        let endDateTime = new Date(`${endDateStr}T${endTimeStr}:00`);
-
-        // Si la hora de finalización es anterior a la de inicio, y es el mismo día,
-        // significa que cruzó la medianoche. Sumar un día a la fecha de finalización.
-        if (endDateTime < startDateTime && startDateStr === endDateStr) {
-            endDateTime.setDate(endDateTime.getDate() + 1);
-        }
-
-        const diffMs = endDateTime - startDateTime;
-        const diffMinutes = Math.floor(diffMs / (1000 * 60));
-
-        const hours = Math.floor(diffMinutes / 60);
-        const minutes = diffMinutes % 60;
-
-        return `${hours}h ${minutes}m`;
     }
-
 
     init(); // Iniciar la aplicación
 });

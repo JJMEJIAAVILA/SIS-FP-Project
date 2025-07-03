@@ -1,5 +1,4 @@
-// SIS-FP/backend/models/User.js - ACTUALIZADO con campo 'role'
-
+// SIS-FP/backend/models/User.js - FINAL Y LIMPIO
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs'); // Necesario para el hashing de contraseñas
 
@@ -39,7 +38,7 @@ const userSchema = new mongoose.Schema({
         enum: ['oscuro', 'claro'], // Puedes añadir más temas
         default: 'oscuro'
     },
-    role: { // NUEVO CAMPO: Rol del usuario
+    role: { // Rol del usuario
         type: String,
         enum: ['admin', 'operator', 'viewer'], // Roles permitidos
         default: 'operator' // Rol por defecto para nuevos usuarios si no se especifica

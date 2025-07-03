@@ -1,4 +1,4 @@
-// SIS-FP/backend/controllers/fuerzaPublicaController.js
+// SIS-FP/backend/controllers/fuerzaPublicaController.js - CORREGIDO
 
 const FuerzaPublica = require('../models/FuerzaPublica');
 
@@ -35,12 +35,12 @@ exports.createFuerzaPublica = async (req, res) => {
 
         const newFuerzaPublica = new FuerzaPublica({
             fecha: parseDateForDB(fecha), // Usar la función auxiliar para la fecha
-            fuerza_publica,
-            unidades,
-            hora_llegada,
-            hora_salida,
-            accion_realizada,
-            observaciones
+            fuerza_publica: fuerza_publica.toUpperCase(), // Asegurar mayúsculas
+            unidades: unidades ? unidades.toUpperCase() : '-', // Asegurar mayúsculas y default
+            hora_llegada: hora_llegada || '-',
+            hora_salida: hora_salida || '-',
+            accion_realizada: accion_realizada ? accion_realizada.toUpperCase() : '-', // Asegurar mayúsculas y default
+            observaciones: observaciones ? observaciones.toUpperCase() : '-' // Asegurar mayúsculas y default
         });
 
         const savedFuerzaPublica = await newFuerzaPublica.save();
@@ -52,6 +52,7 @@ exports.createFuerzaPublica = async (req, res) => {
             const messages = Object.values(error.errors).map(val => val.message);
             return res.status(400).json({ message: messages.join(', ') });
         }
+        // No hay manejo de error 11000 aquí, lo cual es correcto si no hay campos unique en el modelo
         res.status(500).json({ message: 'Error del servidor al crear el registro de fuerza pública.', error: error.message });
     }
 };
@@ -61,7 +62,8 @@ exports.createFuerzaPublica = async (req, res) => {
 // @access  Private
 exports.getFuerzaPublica = async (req, res) => {
     try {
-        const fuerzaPublica = await FuerzaPublica.find().sort({ fecha: -1, createdAt: -1 }); // Ordenar por fecha y creación descendente
+        // CAMBIO: Ordenar por fecha y luego por createdAt de forma ascendente (más antiguos primero)
+        const fuerzaPublica = await FuerzaPublica.find().sort({ fecha: 1, createdAt: 1 });
         res.status(200).json({ fuerzaPublica });
     } catch (error) {
         console.error('Error al obtener los registros de fuerza pública:', error);
@@ -90,7 +92,7 @@ exports.getFuerzaPublicaById = async (req, res) => {
 // @access  Private
 exports.updateFuerzaPublica = async (req, res) => {
     try {
-        const { fecha, ...otherFields } = req.body;
+        const { fecha, fecha_salida, ...otherFields } = req.body; // Incluir fecha_salida para actualización general
 
         const updateFields = { ...otherFields };
 
@@ -98,6 +100,19 @@ exports.updateFuerzaPublica = async (req, res) => {
         if (fecha) {
             updateFields.fecha = parseDateForDB(fecha);
         }
+        // Manejar fecha_salida en la actualización general
+        if (fecha_salida) {
+            updateFields.fecha_salida = parseDateForDB(fecha_salida);
+        } else if (fecha_salida === null) { // Permite borrar la fecha de salida si se envía null
+            updateFields.fecha_salida = null;
+        }
+
+        // Asegurar que los campos string se conviertan a mayúsculas si se actualizan
+        if (updateFields.fuerza_publica) updateFields.fuerza_publica = updateFields.fuerza_publica.toUpperCase();
+        if (updateFields.unidades) updateFields.unidades = updateFields.unidades.toUpperCase();
+        if (updateFields.accion_realizada) updateFields.accion_realizada = updateFields.accion_realizada.toUpperCase();
+        if (updateFields.observaciones) updateFields.observaciones = updateFields.observaciones.toUpperCase();
+
 
         const updatedFuerzaPublica = await FuerzaPublica.findByIdAndUpdate(
             req.params.id,

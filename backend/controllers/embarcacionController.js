@@ -1,4 +1,4 @@
-// SIS-FP/backend/controllers/embarcacionController.js
+// SIS-FP/backend/controllers/embarcacionController.js - CORREGIDO
 const asyncHandler = require('express-async-handler'); // Importa el middleware para manejar errores asíncronos
 const Embarcacion = require('../models/Embarcacion'); // Importa el modelo de Embarcacion
 
@@ -6,7 +6,8 @@ const Embarcacion = require('../models/Embarcacion'); // Importa el modelo de Em
 // @route   GET /api/embarcaciones
 // @access  Private (requiere autenticación JWT)
 const getEmbarcaciones = asyncHandler(async (req, res) => {
-    const embarcaciones = await Embarcacion.find({}); // Encuentra todas las embarcaciones
+    // CAMBIO: Ordenar por fecha de creación más antigua primero (createdAt: 1)
+    const embarcaciones = await Embarcacion.find({}).sort({ createdAt: 1 });
     res.status(200).json(embarcaciones);
 });
 
@@ -20,8 +21,11 @@ const createEmbarcacion = asyncHandler(async (req, res) => {
         throw new Error('Por favor, ingresa todos los campos obligatorios: fecha de registro, piloto y nombre de la embarcación.');
     }
 
+    // CAMBIO: Asegurarse de que fechaRegistro sea un objeto Date
+    const fechaRegistroDate = new Date(req.body.fechaRegistro);
+
     const embarcacion = await Embarcacion.create({
-        fechaRegistro: req.body.fechaRegistro,
+        fechaRegistro: fechaRegistroDate, // Usar el objeto Date
         piloto: req.body.piloto.toUpperCase(), // Convertir a mayúsculas
         nombre_embarcacion: req.body.nombre_embarcacion.toUpperCase(), // Convertir a mayúsculas
         tipo_embarcacion: req.body.tipo_embarcacion ? req.body.tipo_embarcacion.toUpperCase() : '-',
@@ -42,22 +46,27 @@ const updateEmbarcacion = asyncHandler(async (req, res) => {
 
     if (!embarcacion) {
         res.status(404);
-        throw new new Error('Embarcación no encontrada');
+        throw new Error('Embarcación no encontrada'); // Corregido 'new new Error' a 'new Error'
     }
 
-    // Actualizar solo los campos que vienen en el body.
-    // Usamos el valor existente si el campo no se proporciona en la solicitud.
+    // CAMBIO: Si fechaRegistro viene en el body, asegúrate de que sea un objeto Date
+    const updateData = {
+        piloto: req.body.piloto ? req.body.piloto.toUpperCase() : embarcacion.piloto,
+        nombre_embarcacion: req.body.nombre_embarcacion ? req.body.nombre_embarcacion.toUpperCase() : embarcacion.nombre_embarcacion,
+        tipo_embarcacion: req.body.tipo_embarcacion ? req.body.tipo_embarcacion.toUpperCase() : embarcacion.tipo_embarcacion,
+        hora_entrada: req.body.hora_entrada || embarcacion.hora_entrada,
+        observaciones: req.body.observaciones ? req.body.observaciones.toUpperCase() : embarcacion.observaciones
+    };
+
+    if (req.body.fechaRegistro) {
+        updateData.fechaRegistro = new Date(req.body.fechaRegistro);
+    } else {
+        updateData.fechaRegistro = embarcacion.fechaRegistro; // Mantener la fecha existente si no se proporciona
+    }
+
     const updatedEmbarcacion = await Embarcacion.findByIdAndUpdate(
         id,
-        {
-            fechaRegistro: req.body.fechaRegistro || embarcacion.fechaRegistro,
-            piloto: req.body.piloto ? req.body.piloto.toUpperCase() : embarcacion.piloto,
-            nombre_embarcacion: req.body.nombre_embarcacion ? req.body.nombre_embarcacion.toUpperCase() : embarcacion.nombre_embarcacion,
-            tipo_embarcacion: req.body.tipo_embarcacion ? req.body.tipo_embarcacion.toUpperCase() : embarcacion.tipo_embarcacion,
-            hora_entrada: req.body.hora_entrada || embarcacion.hora_entrada,
-            observaciones: req.body.observaciones ? req.body.observaciones.toUpperCase() : embarcacion.observaciones
-            // hora_salida y fecha_salida NO se actualizan aquí; se manejan por updateSalidaEmbarcacion
-        },
+        updateData,
         { new: true, runValidators: true } // 'new: true' para devolver el documento actualizado; 'runValidators: true' para aplicar validadores del esquema
     );
 
@@ -84,7 +93,7 @@ const updateSalidaEmbarcacion = asyncHandler(async (req, res) => {
     }
 
     embarcacion.hora_salida = hora_salida;
-    embarcacion.fecha_salida = fecha_salida;
+    embarcacion.fecha_salida = new Date(fecha_salida); // CAMBIO: Convertir a objeto Date
 
     const updatedEmbarcacion = await embarcacion.save(); // Guardar los cambios
 

@@ -1,4 +1,4 @@
-// SIS-FP/backend/models/Empresa.js
+// SIS-FP/backend/models/Empresa.js - CORREGIDO: Eliminado unique de identificacion
 const mongoose = require('mongoose');
 
 const empresaSchema = new mongoose.Schema({
@@ -26,7 +26,7 @@ const empresaSchema = new mongoose.Schema({
     identificacion: {
         type: String,
         required: true,
-        unique: true // La identificación debe ser única para cada registro
+        // Eliminado: unique: true, // ¡ESTO SE ELIMINA PARA PERMITIR MÚLTIPLES REGISTROS!
     },
     area_ingreso: {
         type: String,
@@ -43,13 +43,12 @@ const empresaSchema = new mongoose.Schema({
         uppercase: true,
         default: '-'
     },
-    tipo_empresa: { // CAMBIO AQUÍ: Nuevas opciones de enum
+    tipo_empresa: {
         type: String,
-        enum: ['FUNCIONARIO', 'CONTRATISTA FIJO', 'CONTRATISTA EVENTUAL', 'VISITANTE'], // Nuevas opciones
-        default: '', // Puede ser vacío o un valor por defecto si lo prefieres
-        required: true // Sigue siendo obligatorio
+        enum: ['FUNCIONARIO', 'CONTRATISTA FIJO', 'CONTRATISTA EVENTUAL', 'VISITANTE'],
+        default: '',
+        required: true
     },
-    // CAMBIO AQUÍ: Campo 'area' eliminado
     dependencia: {
         type: String,
         uppercase: true,

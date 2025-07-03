@@ -1,235 +1,273 @@
-# 🚢 SIS-FP: Solución Integral de Seguridad Física Portuaria
+# 🚀 SIS-FP-Project: Sistema de Gestión Portuaria y Seguridad
+
+¡Bienvenido al repositorio de SIS-FP-Project! Este sistema integral está diseñado para optimizar la gestión y el control de diversas operaciones en un entorno portuario, enfocándose en la seguridad y el registro eficiente de datos.
 
 ---
 
-## 🌟 Descripción del Proyecto
+## ✨ Características Principales
 
-Bienvenido a **SIS-FP**, tu aliado estratégico para la **gestión integral de la seguridad física en entornos portuarios**. 🌊 Este sistema te permite registrar y monitorear de cerca todas las actividades y elementos críticos, ofreciéndote una visión consolidada para tomar decisiones rápidas y efectivas en materia de seguridad. ¡Mantén tu puerto seguro y eficiente! ⚓
-
----
-
-## ✨ Características Destacadas
-
-Hemos desarrollado las siguientes funcionalidades clave para optimizar tus operaciones:
-
-* **🔐 Autenticación Robusta:**
-    * Registro de nuevos usuarios en pocos pasos.
-    * Inicio de sesión seguro con **JWT** para proteger tus datos.
-    * Gestión sencilla de perfiles de usuario.
-* **👥 Gestión de Usuarios (Solo Admins):**
-    * Control total: Lista, crea, edita y elimina usuarios.
-    * Asignación de roles flexibles (`admin`, `operator`, `viewer`) para un control preciso de accesos.
-    * Rutas y funciones protegidas por **RBAC (Role-Based Access Control)**.
-* **📊 Módulos de Reporte y Gestión Específicos:**
-    * **🏢 Empresas:** Administra el personal y sus entradas/salidas.
-    * **🚗 Vehículos:** Monitorea el tráfico vehicular en el puerto.
-    * **🛥️ Embarcaciones:** Controla el movimiento marítimo.
-    * **🕵️‍♂️ Antecedentes:** Registra y consulta historiales de personal.
-    * **💡 Luces:** Supervisa el sistema de iluminación.
-    * **📸 Cámaras:** Configura y vigila tus sistemas de video.
-    * **📢 Protestas:** Registra y gestiona eventos de alteración del orden.
-    * **🛡️ Fuerza Pública:** Coordina y registra solicitudes de apoyo.
-* **📈 Dashboard Interactivo y Potente:**
-    * **KPIs en tiempo real:** Visualiza métricas clave de un vistazo.
-    * **Gráficos dinámicos:** Barras, pastel, y donas para análisis visual de datos.
-    * **Filtros avanzados:** Segmenta tus datos por rangos de fechas (día, mes, año, personalizado) y por tipo (vehículos, embarcaciones).
-* **📱 Diseño Moderno y Adaptable:**
-    * Interfaz **"Glassmorphism"** con un tema oscuro elegante.
-    * **Responsivo:** Se adapta perfectamente a cualquier pantalla, desde móviles hasta grandes monitores, gracias a **Tailwind CSS**.
+* **Gestión de Empresas:** Registro y control de empresas que operan en el puerto.
+* **Control Vehicular:** Monitoreo de entradas y salidas de vehículos.
+* **Registro de Embarcaciones:** Seguimiento de embarcaciones que ingresan y zarpan.
+* **Eventos de Protestas:** Documentación detallada de protestas y bloqueos.
+* **Apoyo de Fuerza Pública:** Registro de la presencia y acciones de las fuerzas de seguridad.
+* **Gestión de Antecedentes:** Verificación y registro de antecedentes de personal.
+* **Dashboard Interactivo:** Reportes y visualizaciones de datos en tiempo real.
+* **Exportación a Excel:** Funcionalidad para exportar registros a hojas de cálculo.
+* **Autenticación Segura:** Acceso protegido mediante tokens JWT.
+* **Interfaz Responsiva:** Adaptable a diferentes tamaños de pantalla (escritorio, tablet, móvil).
 
 ---
 
-## 🛠️ Tecnologías Utilizadas
+## 🏗️ Arquitectura y Funcionamiento
 
-Este proyecto está construido con herramientas robustas y modernas:
+El proyecto SIS-FP sigue una arquitectura **MERN Stack**, lo que significa que utiliza **M**ongoDB, **E**xpress.js, **R**eact (aunque el frontend es HTML/JS puro, sigue la filosofía de componentes y API REST), y **N**ode.js.
 
-### Backend
+### 🌐 Frontend
 
-* **Node.js**: Entorno de ejecución JavaScript.
-* **Express.js**: Framework web para construir APIs RESTful.
-* **MongoDB**: Base de datos NoSQL flexible y escalable.
-* **Mongoose**: Modelado de objetos para MongoDB.
-* **JWT (JSON Web Tokens)**: Seguridad y autenticación sin estado.
-* **Bcrypt.js**: Para un almacenamiento seguro de contraseñas.
-* **CORS**: Manejo de políticas de origen cruzado.
-* **Dotenv**: Gestión de variables de entorno seguras.
+El frontend es una aplicación web construida con **HTML, CSS (Tailwind CSS y estilos personalizados) y JavaScript puro**. Se enfoca en una interfaz de usuario intuitiva y responsiva.
 
-### Frontend
+* **Páginas Principales:**
+    * `login.html`: Interfaz de autenticación de usuarios.
+    * `menu.html`: Dashboard principal con enlaces a las diferentes secciones.
+    * `empresas.html`: Gestión de registros de empresas.
+    * `vehiculos.html`: Gestión de registros de vehículos.
+    * `embarcaciones.html`: Gestión de registros de embarcaciones.
+    * `protestas.html`: Gestión de registros de protestas.
+    * `fuerza_publica.html`: Gestión de registros de apoyo de la fuerza pública.
+    * `antecedentes.html`: Gestión de registros de antecedentes.
+    * `dashboard.html` (o `reporte_general.html`): Visualización de reportes y estadísticas.
+* **Funcionamiento:**
+    * Cada sección del frontend interactúa con el backend a través de **peticiones HTTP (GET, POST, PUT, DELETE)** a las API RESTful.
+    * Utiliza JavaScript para manejar la lógica de la interfaz de usuario, la validación de formularios, la paginación de tablas, la búsqueda y la exportación de datos.
+    * El diseño responsivo se logra mediante **Tailwind CSS** y **media queries** personalizadas.
 
-* **HTML5**: Estructura semántica de las páginas web.
-* **CSS3**: Estilos modernos y diseño responsive con efecto "glassmorphism".
-* **JavaScript**: Lógica interactiva del lado del cliente.
-* **Tailwind CSS**: Un framework CSS de primera clase para un desarrollo rápido y flexible.
-* **Chart.js**: Librería para crear gráficos impresionantes y personalizables.
-* **Font Awesome**: Iconos vectoriales escalables.
+### ⚙️ Backend
 
----
+El backend está construido con **Node.js y el framework Express.js**, proporcionando una API RESTful para la gestión de datos.
 
-## 🚀 Estructura del Proyecto
-
-SIS-FP/
-├── assets/
-│   ├── css/
-│   │   ├── admin_users.css
-│   │   ├── global.css
-│   │   ├── menu.css
-│   │   └── reporte_general.css
-│   ├── img/
-│   │   └── (Imágenes de fondo y otras)
-│   └── js/
-│       ├── admin_users.js
-│       ├── login.js
-│       ├── menu.js
-│       └── reporte_general.js
-├── backend/
-│   ├── controllers/
-│   │   ├── adminUserController.js
-│   │   ├── authController.js (si existe)
-│   │   └── dashboardController.js
-│   ├── middleware/
-│   │   └── authMiddleware.js
-│   ├── models/
-│   │   ├── Antecedente.js
-│   │   ├── Camara.js
-│   │   ├── Embarcacion.js
-│   │   ├── Empresa.js
-│   │   ├── FuerzaPublica.js
-│   │   ├── Luz.js
-│   │   ├── Protesta.js
-│   │   ├── User.js
-│   │   └── Vehiculo.js
-│   ├── routes/
-│   │   ├── adminUserRoutes.js
-│   │   ├── antecedentesRoutes.js
-│   │   ├── camarasRoutes.js
-│   │   ├── dashboardRoutes.js
-│   │   ├── embarcacionesRoutes.js
-│   │   ├── empresas.js
-│   │   ├── fuerzaPublicaRoutes.js
-│   │   ├── lucesRoutes.js
-│   │   ├── protestasRoutes.js
-│   │   └── vehiculos.js
-│   └── server.js
-├── admin_users.html
-├── antecedentes.html
-├── camaras.html
-├── dashboard.html (o reporte_general.html)
-├── embarcaciones.html
-├── empresas.html
-├── fuerza_publica.html
-├── index.html (página de bienvenida/landing)
-├── login.html
-├── luces.html
-├── menu.html
-├── protestas.html
-├── registro_camaras.html
-├── vehiculos.html
-└── .env.example (archivo de ejemplo para variables de entorno)
-
+* **Estructura:**
+    * `models/`: Define los esquemas de datos con Mongoose para MongoDB (ej., `User`, `Empresa`, `Vehiculo`, `Embarcacion`, `Protesta`, `FuerzaPublica`, `Antecedente`).
+    * `controllers/`: Contiene la lógica de negocio para cada ruta, interactuando con los modelos y manejando las peticiones y respuestas HTTP.
+    * `routes/`: Define las rutas de la API y las asocia con las funciones de los controladores.
+    * `middleware/`: Incluye el middleware de autenticación (`authMiddleware.js`) para proteger las rutas.
+    * `config/db.js`: Archivo de configuración para la conexión a la base de datos MongoDB.
+* **Funcionamiento:**
+    * Recibe peticiones del frontend, procesa los datos, interactúa con la base de datos MongoDB y envía respuestas JSON.
+    * Implementa operaciones CRUD (Crear, Leer, Actualizar, Eliminar) para cada entidad.
+    * Manejo de errores centralizado para una mejor robustez.
 
 ---
 
-## 🚀 Configuración y Ejecución
+## 🛠️ Tecnologías y Herramientas
 
-¡Poner en marcha SIS-FP es muy fácil! Sigue estos pasos:
+* **Lenguajes:** JavaScript (Frontend y Backend), HTML, CSS.
+* **Frameworks:**
+    * **Node.js:** Entorno de ejecución de JavaScript en el servidor.
+    * **Express.js:** Framework web para Node.js (Backend).
+    * **Tailwind CSS:** Framework CSS de utilidad para el diseño responsivo (Frontend).
+* **Librerías/Módulos:**
+    * **Mongoose:** ODM (Object Data Modeling) para MongoDB y Node.js.
+    * **jsonwebtoken (JWT):** Para la autenticación basada en tokens.
+    * **bcryptjs:** Para el hash seguro de contraseñas.
+    * **Chart.js:** Para la creación de gráficos interactivos en el dashboard.
+    * **xlsx:** Para la exportación de datos a archivos Excel.
+    * **Font Awesome:** Biblioteca de iconos escalables.
+    * **express-async-handler:** Middleware para manejar errores en rutas asíncronas de Express.
+* **Base de Datos:**
+    * **MongoDB:** Base de datos NoSQL.
+    * **MongoDB Compass:** Herramienta GUI para interactuar con MongoDB.
+* **IDE de Desarrollo:**
+    * **IntelliJ IDEA:** Entorno de desarrollo integrado.
+* **Metodología de Software:**
+    * **Metodología Ágil (Scrum/Kanban):** El desarrollo se ha llevado a cabo de manera iterativa y incremental, adaptándose a los requisitos y priorizando la funcionalidad.
 
-### ⚙️ Prerrequisitos
+---
 
-Asegúrate de tener instalados estos esenciales:
+## 🔒 Mecanismos de Seguridad
 
-* **Node.js y npm**: Descárgalos desde [nodejs.org](https://nodejs.org/).
-* **MongoDB**: Instala MongoDB Community Server desde [mongodb.com/try/download/community](https://www.mongodb.com/try/download/community). ¡Recuerda que el servicio de MongoDB debe estar activo (generalmente en `mongodb://localhost:27017`)! 🗄️ Puedes usar MongoDB Compass para una gestión visual.
+* **Autenticación JWT:** Los usuarios deben iniciar sesión para obtener un token web JSON (JWT) que se utiliza para autenticar todas las solicitudes posteriores al backend.
+* **Hash de Contraseñas:** Las contraseñas se almacenan con hash utilizando `bcryptjs` para protegerlas incluso si la base de datos es comprometida.
+* **Rutas Protegidas:** Todas las rutas sensibles del backend están protegidas por middleware de autenticación, asegurando que solo los usuarios autorizados puedan acceder a ellas.
+* **Validación de Entradas:** Se realiza validación de datos tanto en el frontend como en el backend para prevenir inyecciones y datos maliciosos.
+* **HTTPS (Recomendado):** Aunque no se implementó directamente en el código de desarrollo, para un entorno de producción, se recomienda encarecidamente el uso de HTTPS para cifrar la comunicación entre el cliente y el servidor.
 
-### 📦 Instalación del Backend
+---
 
-1.  **Dirígete a la carpeta `backend`**:
+## 📋 Requerimientos del Sistema
+
+Para ejecutar este proyecto localmente, necesitarás:
+
+* **Node.js:** Versión 14 o superior.
+* **npm:** Gestor de paquetes de Node.js (viene con Node.js).
+* **MongoDB:** Una instancia de MongoDB (local o en la nube, ej. MongoDB Atlas).
+* **Variables de Entorno:** Configurar un archivo `.env` con las variables necesarias (ej., `MONGO_URI`, `JWT_SECRET`).
+
+---
+
+## 🧪 Pruebas con Insomnia / Postman
+
+Las APIs del backend fueron probadas exhaustivamente utilizando herramientas como **Insomnia** o **Postman**. Se verificaron las operaciones CRUD (GET, POST, PUT, DELETE) para cada recurso (Empresas, Vehículos, Embarcaciones, Protestas, Fuerza Pública, Antecedentes), así como los flujos de autenticación (registro de usuario, inicio de sesión).
+
+---
+
+## 📊 Diagramas Conceptuales
+
+### 🏛️ Diagrama de Clases (Conceptual)
+
+Representa las entidades principales del sistema y sus atributos clave.
+
++----------------+       +-----------------+       +-----------------+
+|      User      |       |     Empresa     |       |     Vehiculo    |
++----------------+       +-----------------+       +-----------------+
+| - username: String     | - fechaRegistro: Date   | - fechaRegistro: Date   |
+| - email: String        | - nombre: String        | - conductor: String     |
+| - password: String     | - nit: String           | - empresa: String       |
+| - role: String         | - hora_entrada: String  | - placa: String         |
+| - createdAt: Date      | - hora_salida: String   | - tipo_vehiculo: String |
+| - updatedAt: Date      | - fecha_salida: Date    | - hora_entrada: String  |
+|                        | - observaciones: String | - parqueadero_interno: Boolean |
++----------------+       +-----------------+       | - parqueadero_visitantes: Boolean |
+|                                         | - hora_salida: String   |
+|                                         | - fecha_salida: Date    |
+|                                         | - observaciones: String |
+|                                         +-----------------+
+|
+| (Autentica)
+V
++---------------------+       +-------------------+       +--------------------+
+|     Embarcacion     |       |   FuerzaPublica   |       |     Antecedente    |
++---------------------+       +-------------------+       +--------------------+
+| - fechaRegistro: Date       | - fecha: Date             | - fechaRegistro: Date      |
+| - piloto: String            | - fuerza_publica: String  | - tipo_documento: String   |
+| - nombre_embarcacion: String| - unidades: String        | - numero_documento: String |
+| - tipo_embarcacion: String  | - hora_llegada: String    | - nombre_completo: String  |
+| - hora_entrada: String      | - hora_salida: String     | - resultado_verificacion: String |
+| - hora_salida: String       | - fecha_salida: Date      | - observaciones: String    |
+| - fecha_salida: Date        | - accion_realizada: String| - verificado_por: String   |
+| - observaciones: String     | - observaciones: String   +--------------------+
++---------------------+       +-------------------+
+^
+| (Registra)
+|
++---------------------+
+|      Protesta       |
++---------------------+
+| - fecha: Date               |
+| - tipo_protesta: String     |
+| - vias: String              |
+| - sector_bloqueo: String    |
+| - motivo_protesta: String   |
+| - generador_protesta: String|
+| - hora_inicio: String       |
+| - hora_finalizacion: String |
+| - fecha_finalizacion: Date  |
+| - tiempo_total_bloqueo: String |
+| - geoposicion: String       |
+| - observaciones: String     |
++---------------------+
+
+### ↔️ Diagrama de Entidad-Relación (Conceptual)
+
+Muestra las relaciones entre las colecciones de la base de datos.
+
++-----------+       +-----------+       +-----------+
+|   USERS   |-------|  EMPRESAS |-------|  VEHICULOS|
++-----------+       +-----------+       +-----------+
+| _id       |<--1:N--| _id       |<--1:N--| _id       |
+| username  |       | fechaReg. |       | fechaReg. |
+| email     |       | nombre    |       | conductor |
+| password  |       | nit       |       | empresa   |
+| role      |       | ...       |       | placa     |
++-----------+       +-----------+       | ...       |
++-----------+
+
++-----------------+       +-------------------+       +------------------+
+|  EMBARCACIONES  |-------|  FUERZAPUBLICAS   |-------|  ANTECEDENTES    |
++-----------------+       +-------------------+       +------------------+
+| _id             |<--1:N--| _id               |<--1:N--| _id              |
+| fechaRegistro   |       | fecha             |       | fechaRegistro    |
+| piloto          |       | fuerza_publica    |       | tipo_documento   |
+| nombre_embarcacion|     | unidades          |       | numero_documento |
+| ...             |       | ...               |       | ...              |
++-----------------+       +-------------------+       +------------------+
+
++-----------+
+|  PROTESTAS|
++-----------+
+| _id       |
+| fecha     |
+| tipo_prot.|
+| vias      |
+| ...       |
++-----------+
+
+---
+
+## 🗺️ Mapa de Navegación
+
+El sistema está diseñado para una navegación clara y estructurada:
+
+1.  **Página de Login (`login.html`)** 🔑
+    * Punto de entrada al sistema.
+    * Permite a los usuarios autenticarse.
+    * Redirige al `menu.html` tras un inicio de sesión exitoso.
+
+2.  **Menú Principal (`menu.html`)** 🏠
+    * Actúa como el dashboard central y punto de partida para todas las operaciones.
+    * **Desplegables y Secciones:**
+        * **Gestión de Entradas y Salidas** 🚪
+            * **Empresas:** Acceso a la gestión de registros de entrada y salida de personal de empresas.
+            * **Vehículos:** Acceso a la gestión de registros de entrada y salida de vehículos.
+            * **Embarcaciones:** Acceso a la gestión de registros de entrada y zarpe de embarcaciones.
+        * **Incidentes y Apoyos** 🚨
+            * **Protestas:** Acceso al registro y seguimiento de eventos de protestas y bloqueos.
+            * **Fuerza Pública:** Acceso al registro de apoyos y acciones de las fuerzas de seguridad.
+        * **Seguridad y Verificación** ✅
+            * **Antecedentes:** Acceso a la verificación y registro de antecedentes de personal.
+        * **Reportes y Estadísticas** 📈
+            * **Dashboard / Reporte General:** Acceso al panel de control con visualizaciones y filtros de datos consolidados.
+
+3.  **Páginas de Gestión (Ej. `empresas.html`, `vehiculos.html`, etc.)** 📝
+    * Cada sección (Empresas, Vehículos, Embarcaciones, Protestas, Fuerza Pública, Antecedentes) tiene su propia página dedicada.
+    * Contiene tablas para visualizar los registros.
+    * Botones para "Nuevo Registro", "Editar", "Eliminar" y "Exportar a Excel".
+    * Formularios para la creación y edición de registros.
+    * Funcionalidades específicas (ej. "Registrar Salida" para vehículos/embarcaciones, "Finalizar Protesta").
+
+4.  **Dashboard / Reporte General (`dashboard.html` o `reporte_general.html`)** 📊
+    * Presenta un resumen visual de los datos del sistema.
+    * **KPIs:** Muestra contadores clave (ej. Total de Protestas, Vehículos Registrados).
+    * **Filtros de Datos:** Permite filtrar la información por rango de fechas y tipos específicos.
+    * **Gráficos:** Visualizaciones de datos (ej. Ingreso de Personal por Hora, Control Vehicular por Tipo, Protestas por Motivo).
+
+---
+
+## 🛠️ Instalación y Ejecución Local
+
+Para poner en marcha el proyecto en tu máquina local:
+
+1.  **Clona el repositorio:**
     ```bash
-    cd SIS-FP/backend
+    git clone [https://github.com/JJMEJIAAVILA/SIS-FP-Project.git](https://github.com/JJMEJIAAVILA/SIS-FP-Project.git)
+    cd SIS-FP-Project
     ```
-2.  **Instala todas las dependencias de Node.js**:
-    ```bash
-    npm install
-    ```
-3.  **Crea tu archivo `.env`**:
-    En la carpeta `backend`, crea un archivo llamado `.env`. Este archivo contendrá tus variables de entorno sensibles. ¡Puedes copiar el contenido de `.env.example` y personalizarlo!
+2.  **Configura el Backend:**
+    * Navega a la carpeta `backend`: `cd backend`
+    * Instala las dependencias: `npm install`
+    * Crea un archivo `.env` en la carpeta `backend` con tus variables de entorno. Ejemplo:
+        ```
+        MONGO_URI=mongodb://localhost:27017/sis_fp_db
+        JWT_SECRET=tu_secreto_jwt_muy_seguro
+        PORT=3000
+        ```
+    * Inicia el servidor backend: `npm start` (o `node server.js` si tu script de inicio es `server.js`)
+3.  **Configura el Frontend:**
+    * El frontend es estático (HTML, CSS, JS). Simplemente abre los archivos HTML en tu navegador.
+    * Asegúrate de que las rutas a los archivos CSS y JS en tu HTML sean correctas (ej. `assets/css/global.css`).
+    * Verifica que la URL de la API en los archivos JavaScript del frontend (`apiBaseUrl`) apunte a tu servidor backend (ej. `http://localhost:3000/api/empresas`).
 
-    ```env
-    PORT=3000
-    MONGO_URI=mongodb://localhost:27017/sis_fp_db
-    JWT_SECRET=tu_clave_secreta_muy_larga_y_segura!
-    ```
-    * `PORT`: El puerto donde tu servidor backend estará escuchando.
-    * `MONGO_URI`: La cadena de conexión a tu base de datos MongoDB.
-    * `JWT_SECRET`: Una clave secreta **MUY SEGURA** para firmar los tokens JWT. ¡**Cámbiala por una cadena aleatoria y compleja** antes de ir a producción! 🔒
-
-### 🗄️ Configuración de la Base de Datos
-
-Asegúrate de que tu base de datos `sis_fp_db` esté accesible y funcionando.
-
-**Para el Acceso de Administrador:**
-Para usar la interfaz de gestión de usuarios, necesitas que al menos una cuenta en tu base de datos tenga el rol de `admin`. Si no tienes una, puedes modificar un usuario existente o crear uno nuevo usando MongoDB Compass:
-
-1.  Abre MongoDB Compass y conéctate a `mongodb://localhost:27017`.
-2.  Selecciona tu base de datos `sis_fp_db`.
-3.  Ve a la colección `users`.
-4.  Encuentra el documento del usuario al que quieres darle acceso de administrador (o crea uno nuevo).
-5.  Haz clic en el icono de edición (el lápiz ✏️) y asegúrate de que el campo `role` esté configurado como `"admin"`:
-    ```json
-    {
-      // ... otros campos
-      "username": "superadmin",
-      "email": "admin@example.com",
-      "password": "hashed_password",
-      "role": "admin", // ✨ ¡Este es el campo clave!
-      // ... otros campos
-    }
-    ```
-6.  ¡Guarda los cambios y listo!
-
-### ▶️ Ejecución del Backend
-
-1.  Desde la carpeta `backend`, inicia tu servidor con un simple comando:
-    ```bash
-    node server.js
-    ```
-    Si todo va bien, verás un mensaje confirmando que tu servidor Express está escuchando en el puerto 3000 y que MongoDB se ha conectado correctamente. 🎉
-
-### 🌐 Ejecución del Frontend
-
-El frontend de SIS-FP funciona con archivos estáticos, ¡así que es muy fácil de lanzar!
-
-1.  Abre tu navegador web favorito (Chrome, Firefox, Edge, Safari).
-2.  Navega directamente a la página de inicio de sesión de tu aplicación. Si tu backend está en `localhost:3000` y tus archivos frontend están en la raíz de `SIS-FP`, la URL más común sería:
-    ```
-    http://localhost:3000/login.html
-    ```
-    Si usas una extensión como Live Server en VS Code, simplemente abre `login.html` con ella, y el frontend se conectará automáticamente a tu backend en `localhost:3000`.
 
 ---
 
-## 👩‍💻 Uso de la Aplicación
-
-1.  **Iniciar Sesión:**
-    * Usa las credenciales de un usuario registrado. Si tienes un usuario con `role: "admin"`, ¡podrás explorar todas las funcionalidades!
-2.  **Navegación Intuitiva:**
-    * Desde el menú principal, accede fácilmente a todos los módulos de reporte y gestión.
-    * El **Dashboard** te espera con análisis de datos en tiempo real y filtros personalizables.
-3.  **Gestión de Usuarios (¡Solo Admins!):**
-    * Haz clic en la tarjeta "Admin. Usuarios" en el menú principal.
-    * Desde ahí, tendrás el poder de gestionar todas las cuentas del sistema.
-
----
-
-## 💡 Próximas Mejoras y Consideraciones
-
-* **Dashboard al 💯:** Continuar afinando los contadores y gráficos para que siempre muestren datos precisos.
-* **PWA - Acceso Directo:** Implementar la funcionalidad completa de PWA (`manifest.json` y Service Worker) para una experiencia de instalación en el escritorio/móvil con un icono personalizado. 📱
-* **Manejo de Errores Amigable:** Mejorar los mensajes de error en el frontend para una experiencia de usuario más fluida.
-* **Optimización del Rendimiento:** Considerar la adición de índices en la base de datos para consultas más rápidas en colecciones grandes.
-* **Seguridad Avanzada:** Para entornos de producción, ¡siempre es buena idea implementar HTTPS y validaciones de entrada más rigurosas!
-
----
-
-¡Esperamos que disfrutes desarrollando y utilizando **SIS-FP**! 🎉
-
-Si tienes alguna pregunta, sugerencia o necesitas ayuda, ¡no dudes en comunicarte!
+¡Gracias por explorar SIS-FP-Project! Si tienes alguna pregunta, no dudes en contactarme.

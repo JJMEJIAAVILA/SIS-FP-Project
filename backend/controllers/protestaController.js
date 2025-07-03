@@ -1,5 +1,4 @@
-// SIS-FP/backend/controllers/protestaController.js - ACTUALIZADO PARA CORREGIR LA FECHA
-
+// SIS-FP/backend/controllers/protestaController.js - CORREGIDO
 const Protesta = require('../models/Protesta');
 
 // Función auxiliar para manejar la fecha para evitar el problema del día anterior
@@ -39,17 +38,17 @@ exports.createProtesta = async (req, res) => {
 
         const newProtesta = new Protesta({
             fecha: parseDateForDB(fecha), // Usar la función auxiliar para la fecha
-            tipo_protesta,
-            vias,
-            sector_bloqueo,
-            motivo_protesta,
-            generador_protesta,
-            hora_inicio,
-            hora_finalizacion,
+            tipo_protesta: tipo_protesta.toUpperCase(), // Asegurar mayúsculas
+            vias: vias ? vias.toUpperCase() : '-', // Asegurar mayúsculas y default
+            sector_bloqueo: sector_bloqueo ? sector_bloqueo.toUpperCase() : '-', // Asegurar mayúsculas y default
+            motivo_protesta: motivo_protesta ? motivo_protesta.toUpperCase() : '-', // Asegurar mayúsculas y default
+            generador_protesta: generador_protesta ? generador_protesta.toUpperCase() : '-', // Asegurar mayúsculas y default
+            hora_inicio: hora_inicio || '-',
+            hora_finalizacion: hora_finalizacion || '-', // Asegurar default si no viene
             fecha_finalizacion: null, // Siempre nulo al crear
-            tiempo_total_bloqueo,
-            geoposicion,
-            observaciones
+            tiempo_total_bloqueo: tiempo_total_bloqueo || '-', // Asegurar default si no viene
+            geoposicion: geoposicion ? geoposicion.toUpperCase() : '-', // Asegurar mayúsculas y default
+            observaciones: observaciones ? observaciones.toUpperCase() : '-' // Asegurar mayúsculas y default
         });
 
         const savedProtesta = await newProtesta.save();
@@ -61,6 +60,7 @@ exports.createProtesta = async (req, res) => {
             const messages = Object.values(error.errors).map(val => val.message);
             return res.status(400).json({ message: messages.join(', ') });
         }
+        // No hay manejo de error 11000 aquí, lo cual es correcto si no hay campos unique en el modelo
         res.status(500).json({ message: 'Error del servidor al crear el registro de protesta.', error: error.message });
     }
 };
@@ -70,7 +70,8 @@ exports.createProtesta = async (req, res) => {
 // @access  Private
 exports.getProtestas = async (req, res) => {
     try {
-        const protestas = await Protesta.find().sort({ fecha: -1, createdAt: -1 }); // Ordenar por fecha de forma descendente
+        // CAMBIO: Ordenar por fecha y luego por createdAt de forma ascendente (más antiguos primero)
+        const protestas = await Protesta.find().sort({ fecha: 1, createdAt: 1 });
         res.status(200).json({ protestas });
     } catch (error) {
         console.error('Error al obtener los registros de protestas:', error);
@@ -113,6 +114,15 @@ exports.updateProtesta = async (req, res) => {
         } else if (fecha_finalizacion === null) { // Permite borrar la fecha de finalización si se envía null
             updateFields.fecha_finalizacion = null;
         }
+
+        // Asegurar que los campos string se conviertan a mayúsculas si se actualizan
+        if (updateFields.tipo_protesta) updateFields.tipo_protesta = updateFields.tipo_protesta.toUpperCase();
+        if (updateFields.vias) updateFields.vias = updateFields.vias.toUpperCase();
+        if (updateFields.sector_bloqueo) updateFields.sector_bloqueo = updateFields.sector_bloqueo.toUpperCase();
+        if (updateFields.motivo_protesta) updateFields.motivo_protesta = updateFields.motivo_protesta.toUpperCase();
+        if (updateFields.generador_protesta) updateFields.generador_protesta = updateFields.generador_protesta.toUpperCase();
+        if (updateFields.geoposicion) updateFields.geoposicion = updateFields.geoposicion.toUpperCase();
+        if (updateFields.observaciones) updateFields.observaciones = updateFields.observaciones.toUpperCase();
 
 
         const updatedProtesta = await Protesta.findByIdAndUpdate(
