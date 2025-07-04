@@ -1,15 +1,17 @@
-// SIS-FP/assets/js/antecedentes.js
+// SIS-FP/assets/js/antecedentes.js - ACTUALIZADO (Manejo de Fecha de Registro y Errores de 6 meses)
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM Content Loaded for antecedentes.js');
+
     // --- Configuración Inicial de la Interfaz de Usuario ---
     const userDisplayElement = document.getElementById('userDisplay');
-    const storedUsername = localStorage.getItem('username'); // Obtener el nombre de usuario del localStorage
+    const storedUsername = localStorage.getItem('username');
 
     if (userDisplayElement) {
         if (storedUsername) {
-            userDisplayElement.textContent = storedUsername.toUpperCase(); // Mostrar el nombre de usuario en mayúsculas
+            userDisplayElement.textContent = storedUsername.toUpperCase();
         } else {
-            userDisplayElement.textContent = 'INVITADO'; // Por defecto, mostrar 'INVITADO'
+            userDisplayElement.textContent = 'INVITADO';
         }
     }
 
@@ -18,24 +20,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const newRegisterForm = document.getElementById('newRegisterForm');
     const registerForm = document.getElementById('registerForm');
     const cancelFormBtn = document.getElementById('cancelFormBtn');
-    const tableBody = document.getElementById('tableBody'); // Tabla principal de antecedentes
+    const tableBody = document.getElementById('tableBody');
     const searchInput = document.getElementById('searchInput');
     const exportExcelBtn = document.getElementById('exportExcelBtn');
 
     // --- Variables de Estado para Datos y Paginación ---
-    let allAntecedentesData = [];    // Almacena todos los datos de antecedentes cargados del backend
-    let currentPage = 1;      // Página actual de la tabla
-    const recordsPerPage = 10; // Número de registros por página
+    let allAntecedentesData = [];
+    let currentPage = 1;
+    const recordsPerPage = 10;
 
     // --- Funciones de Utilidad ---
 
-    // Formatea una cadena de fecha y hora a 'DD/MM/YYYY HH:MM'
-    const formatDateTime = (dateTimeString) => {
-        if (!dateTimeString) return '';
-        const date = new Date(dateTimeString);
-        if (isNaN(date.getTime())) return dateTimeString;
-        return date.toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' }) + ' ' +
-            date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    // Formatea una cadena de fecha y hora a 'DD/MM/YYYY' (solo fecha, para la tabla)
+    const formatDate = (dateString) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return dateString;
+        // Usar UTC para evitar problemas de zona horaria al mostrar fechas guardadas en UTC
+        return `${String(date.getUTCDate()).padStart(2, '0')}/${String(date.getUTCMonth() + 1).padStart(2, '0')}/${date.getUTCFullYear()}`;
     };
 
     // Función auxiliar para obtener las cabeceras con el token
@@ -52,10 +54,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Carga de Datos desde el Backend (API) ---
     async function loadAntecedentes() {
+        console.log('Loading antecedentes...');
         try {
-            const headers = getAuthHeaders(); // Obtener cabeceras con o sin token
+            const headers = getAuthHeaders();
 
-            // Realizar la petición GET para obtener todos los antecedentes
             const response = await fetch('http://localhost:3000/api/antecedentes', { headers });
 
             if (!response.ok) {
@@ -70,8 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (response.status === 401) {
                     alert(`Sesión expirada o no autorizado: ${errorMessage}. Por favor, inicie sesión nuevamente.`);
-                    // Opcional: Redirigir a la página de login
-                    // window.location.href = './login.html';
+                    window.location.href = './login.html'; // Redirigir a login
                 } else {
                     throw new Error(errorMessage);
                 }
@@ -79,12 +80,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const data = await response.json();
             allAntecedentesData = data.antecedentes;
+            console.log('Antecedentes loaded:', allAntecedentesData);
 
             renderAntecedentesTable(allAntecedentesData);
 
         } catch (error) {
             console.error('Error al cargar los antecedentes:', error);
-            tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-4">Error al cargar los datos.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="9" class="text-center py-4 text-red-400">Error al cargar los datos: ${error.message}</td></tr>`; // Colspan ajustado a 9
             alert(`Error al cargar los datos: ${error.message}`);
         }
     }
@@ -92,27 +94,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Renderizado de la Tabla de Antecedentes ---
 
     function renderAntecedentesTable(dataToRender) {
-        tableBody.innerHTML = ''; // Limpiar la tabla antes de renderizar
+        tableBody.innerHTML = '';
         const searchTerm = searchInput.value.toLowerCase();
 
-        // Filtrar datos basado en el término de búsqueda
         const filteredData = dataToRender.filter(antecedente => {
+            // Asegurarse de que los campos existen antes de intentar acceder a ellos
             return (antecedente.nombre && antecedente.nombre.toLowerCase().includes(searchTerm)) ||
                 (antecedente.numero_identificacion && antecedente.numero_identificacion.toLowerCase().includes(searchTerm)) ||
-                (antecedente.empresa && antecededente.empresa.toLowerCase().includes(searchTerm)) ||
-                (antecedente.dependencia && antecededente.dependencia.toLowerCase().includes(searchTerm)) ||
-                (antecedente.observaciones && antecededente.observaciones.toLowerCase().includes(searchTerm)) ||
-                (antecedente.resultado_verificacion && antecededente.resultado_verificacion.toLowerCase().includes(searchTerm)) ||
+                (antecedente.empresa && antecedente.empresa.toLowerCase().includes(searchTerm)) ||
+                (antecedente.dependencia && antecedente.dependencia.toLowerCase().includes(searchTerm)) ||
+                (antecedente.observaciones && antecedente.observaciones.toLowerCase().includes(searchTerm)) ||
+                (antecedente.resultado_verificacion && antecedente.resultado_verificacion.toLowerCase().includes(searchTerm)) ||
                 (antecedente.item && antecedente.item.toString().includes(searchTerm));
         });
 
         if (filteredData.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-4">No hay registros disponibles. Agregue un nuevo registro.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="9" class="text-center py-4 text-gray-400">No hay registros disponibles o no se encontraron resultados.</td></tr>`; // Colspan ajustado a 9
             updatePaginationInfo(0);
             return;
         }
 
-        // Aplicar paginación
         const startIndex = (currentPage - 1) * recordsPerPage;
         const endIndex = startIndex + recordsPerPage;
         const paginatedData = filteredData.slice(startIndex, endIndex);
@@ -120,27 +121,29 @@ document.addEventListener('DOMContentLoaded', () => {
         paginatedData.forEach((antecedente) => {
             const row = document.createElement('tr');
             row.className = 'hover:bg-white hover:bg-opacity-10';
+            // Usa antecedente.createdAt si fechaRegistro no está en tu modelo, o viceversa
+            const fechaRegistroDisplay = formatDate(antecedente.fechaRegistro || antecedente.createdAt);
+
             row.innerHTML = `
-                <td class="px-4 py-3 text-center">${antecedente.item}</td>
-                <td class="px-4 py-3">${antecedente.nombre || 'N/A'}</td>
-                <td class="px-4 py-3 text-center">${antecedente.numero_identificacion || 'N/A'}</td>
-                <td class="px-4 py-3">${antecedente.empresa || 'N/A'}</td>
-                <td class="px-4 py-3">${antecedente.dependencia || 'N/A'}</td>
+                <td class="px-4 py-3 text-center">${antecedente.item || '-'}</td>
+                <td class="px-4 py-3">${antecedente.nombre || '-'}</td>
+                <td class="px-4 py-3 text-center">${antecedente.numero_identificacion || '-'}</td>
+                <td class="px-4 py-3">${antecedente.empresa || '-'}</td>
+                <td class="px-4 py-3">${antecedente.dependencia || '-'}</td>
                 <td class="px-4 py-3">${antecedente.observaciones || 'Sin observaciones'}</td>
                 <td class="px-4 py-3 text-center">${antecedente.resultado_verificacion || 'PENDIENTE'}</td>
+                <td class="px-4 py-3 text-center">${fechaRegistroDisplay}</td> <!-- Nueva celda para la fecha de registro -->
                 <td class="px-4 py-3 text-center">
                     <button class="edit-btn bg-yellow-500 hover:bg-yellow-600 text-black px-3 py-1 rounded mr-2" data-id="${antecedente._id}">Editar</button>
                     <button class="delete-btn bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded" data-id="${antecedente._id}">Eliminar</button>
-                    <!-- Botón para verificar en la página de la Policía Nacional -->
                     <button class="verify-btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded ml-2" data-id-number="${antecedente.numero_identificacion}">Verificar</button>
                 </td>
             `;
             tableBody.appendChild(row);
         });
-        updatePaginationInfo(filteredData.length); // Actualizar información de paginación
+        updatePaginationInfo(filteredData.length);
     }
 
-    // Actualiza la información de paginación en la UI
     function updatePaginationInfo(totalRecords) {
         document.getElementById('currentRecords').textContent = totalRecords;
         const totalPages = Math.ceil(totalRecords / recordsPerPage);
@@ -151,7 +154,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Manejo de Eventos ---
 
-    // Mostrar/Ocultar formulario de nuevo registro/edición
     newRegisterBtn.addEventListener('click', () => {
         newRegisterForm.classList.toggle('hidden');
         if (!newRegisterForm.classList.contains('hidden')) {
@@ -161,14 +163,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const itemInput = registerForm.querySelector('[name="item"]');
             if (itemInput) {
+                // Calcular el siguiente ITEM disponible
                 const maxItem = allAntecedentesData.reduce((max, ant) => Math.max(max, ant.item || 0), 0);
                 itemInput.value = maxItem + 1;
-                itemInput.readOnly = false;
+                itemInput.readOnly = false; // Asegurarse de que no esté en solo lectura para nuevos registros
             }
         }
     });
 
-    // Cancelar el formulario
     cancelFormBtn.addEventListener('click', () => {
         newRegisterForm.classList.add('hidden');
         registerForm.reset();
@@ -179,20 +181,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Envío del formulario (Agregar/Editar Antecedente)
     registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const editingId = registerForm.dataset.editingId;
         const formData = new FormData(registerForm);
         const data = Object.fromEntries(formData.entries());
 
-        // Convertir item a número y campos de texto a mayúsculas
         if (data.item) data.item = parseInt(data.item);
-        if (data.nombre) data.nombre = data.nombre.toUpperCase();
-        if (data.empresa) data.empresa = data.empresa.toUpperCase();
-        if (data.dependencia) data.dependencia = data.dependencia.toUpperCase();
-        if (data.observaciones) data.observaciones = data.observaciones.toUpperCase();
-        if (data.resultado_verificacion) data.resultado_verificacion = data.resultado_verificacion.toUpperCase();
+        // Los campos de texto se convierten a mayúsculas en el backend, pero es buena práctica hacerlo también aquí
+        // para una validación visual inmediata si se desea. Sin embargo, el backend es la fuente de verdad.
 
         const url = editingId ? `http://localhost:3000/api/antecedentes/${editingId}` : 'http://localhost:3000/api/antecedentes';
         const method = editingId ? 'PUT' : 'POST';
@@ -221,28 +218,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 } catch (jsonParseError) {
                     errorMessage = `Error inesperado del servidor: ${errorText.substring(0, 100)}... (no es JSON válido)`;
                 }
-                throw new Error(errorMessage);
+                console.error('Frontend Error:', errorMessage); // Log del error en consola
+                alert(`Error al guardar el antecedente: ${errorMessage}`); // Mostrar mensaje de error al usuario
+                throw new Error(errorMessage); // Lanzar error para el catch
             }
 
             alert(`Antecedente ${editingId ? 'actualizado' : 'agregado'} exitosamente.`);
             newRegisterForm.classList.add('hidden');
-            loadAntecedentes();
+            loadAntecedentes(); // Recargar la tabla
         } catch (error) {
-            console.error('Error al guardar el antecedente:', error);
-            alert(`Error al guardar el antecedente: ${error.message}`);
+            console.error('Error en la solicitud fetch al guardar antecedente:', error);
+            // El alert ya se mostró en el bloque if (!response.ok)
         }
     });
 
-    // Delegación de eventos para botones en la tabla de antecedentes (Editar, Eliminar, Verificar)
     tableBody.addEventListener('click', async (e) => {
         const headers = getAuthHeaders();
 
-        if (!headers['Authorization'] && !e.target.classList.contains('verify-btn')) { // 'verify-btn' no necesita token para abrir enlace
+        if (!headers['Authorization'] && !e.target.classList.contains('verify-btn')) {
             alert('No se encontró el token de autenticación. Por favor, inicie sesión nuevamente para realizar esta acción.');
             return;
         }
 
-        // --- Botón EDITAR ---
         if (e.target.classList.contains('edit-btn')) {
             const id = e.target.dataset.id;
             const antecedenteToEdit = allAntecedentesData.find(a => a._id === id);
@@ -260,9 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 registerForm.querySelector('[name="observaciones"]').value = antecedenteToEdit.observaciones;
                 registerForm.querySelector('[name="resultado_verificacion"]').value = antecedenteToEdit.resultado_verificacion;
             }
-        }
-        // --- Botón ELIMINAR ---
-        else if (e.target.classList.contains('delete-btn')) {
+        } else if (e.target.classList.contains('delete-btn')) {
             const id = e.target.dataset.id;
             if (confirm('¿Estás seguro de que quieres eliminar este registro de antecedente?')) {
                 try {
@@ -280,6 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         } catch (jsonParseError) {
                             errorMessage = `Error inesperado del servidor: ${errorText.substring(0, 100)}... (no es JSON válido)`;
                         }
+                        console.error('Frontend Error:', errorMessage);
                         throw new Error(errorMessage);
                     }
                     alert('Antecedente eliminado exitosamente.');
@@ -289,26 +285,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert(`Error al eliminar el antecedente: ${error.message}`);
                 }
             }
-        }
-        // --- Botón VERIFICAR (Abre enlace externo) ---
-        else if (e.target.classList.contains('verify-btn')) {
+        } else if (e.target.classList.contains('verify-btn')) {
             const idNumber = e.target.dataset.idNumber;
-            // Enlace oficial de consulta de antecedentes de la Policía Nacional de Colombia
             const verificationUrl = `https://antecedentes.policia.gov.co:7005/WebJudicial/antecedentes.xhtml`;
-
-            // Abre el enlace en una nueva pestaña
             window.open(verificationUrl, '_blank');
-
-            // Opcional: Podrías preguntar al usuario si desea actualizar el estado después de la verificación
-            // const updateStatus = confirm('¿Ya verificó los antecedentes? ¿Desea actualizar el estado de este registro?');
-            // if (updateStatus) {
-            //     // Aquí puedes abrir un pequeño modal para que el usuario elija el resultado_verificacion
-            //     // y luego hacer un PUT a la API /api/antecedentes/:id
-            // }
         }
     });
 
-    // --- Paginación ---
     document.getElementById('prevPageBtn').addEventListener('click', () => {
         if (currentPage > 1) {
             currentPage--;
@@ -324,13 +307,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- Búsqueda (Filtro) ---
     searchInput.addEventListener('input', () => {
         currentPage = 1;
         renderAntecedentesTable(allAntecedentesData);
     });
 
-    // --- Exportar a Excel ---
     exportExcelBtn.addEventListener('click', () => {
         if (allAntecedentesData.length === 0) {
             alert("No hay datos para exportar.");
@@ -338,14 +319,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const dataToExport = allAntecedentesData.map(antecedente => ({
-            ITEM: antecedente.item,
-            NOMBRE: antecededente.nombre,
-            'N.I.': antecedente.numero_identificacion,
-            EMPRESA: antecededente.empresa,
-            DEPENDENCIA: antecededente.dependencia,
-            OBSERVACIONES: antecedente.observaciones,
-            'RESULTADO DE VERIFICACIÓN': antecedente.resultado_verificacion,
-            'FECHA DE REGISTRO': formatDateTime(antecedente.createdAt)
+            ITEM: antecedente.item || '-',
+            NOMBRE: antecedente.nombre || '-',
+            'N.I.': antecedente.numero_identificacion || '-',
+            EMPRESA: antecedente.empresa || '-',
+            DEPENDENCIA: antecedente.dependencia || '-',
+            OBSERVACIONES: antecedente.observaciones || 'Sin observaciones',
+            'RESULTADO DE VERIFICACIÓN': antecedente.resultado_verificacion || 'PENDIENTE',
+            // Usa antecedente.createdAt si fechaRegistro no está en tu modelo, o viceversa
+            'FECHA DE REGISTRO': formatDate(antecedente.fechaRegistro || antecedente.createdAt)
         }));
 
         const wb = XLSX.utils.book_new();
@@ -355,6 +337,5 @@ document.addEventListener('DOMContentLoaded', () => {
         XLSX.writeFile(wb, "Reporte_Antecedentes.xlsx");
     });
 
-    // Cargar datos al iniciar la página
     loadAntecedentes();
 });

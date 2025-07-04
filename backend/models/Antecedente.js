@@ -1,11 +1,12 @@
-// SIS-FP/backend/models/Antecedente.js
+// SIS-FP/backend/models/Antecedente.js - CORREGIDO (Eliminado unique de numero_identificacion)
+
 const mongoose = require('mongoose');
 
 const antecedenteSchema = new mongoose.Schema({
     item: {
         type: Number,
         required: true,
-        unique: true // Asegura que cada ITEM sea único
+        unique: true // El ITEM sigue siendo único
     },
     nombre: {
         type: String,
@@ -15,7 +16,8 @@ const antecedenteSchema = new mongoose.Schema({
     numero_identificacion: {
         type: String,
         required: true,
-        unique: true // El número de identificación debe ser único
+        // Eliminado: unique: true
+        // La lógica de los 6 meses en el controlador ahora controlará la duplicidad temporal
     },
     empresa: {
         type: String,
@@ -32,15 +34,15 @@ const antecedenteSchema = new mongoose.Schema({
         uppercase: true,
         default: ''
     },
-    // Campo para el resultado de la verificación de antecedentes
     resultado_verificacion: {
         type: String,
         enum: ['CON ANTECEDENTES', 'SIN ANTECEDENTES', 'NO APLICA', 'PENDIENTE'],
-        default: 'PENDIENTE', // Estado inicial antes de la verificación
+        default: 'PENDIENTE',
         required: true
     }
 }, {
-    timestamps: true // Añade createdAt y updatedAt automáticamente
+    timestamps: true // Esto añade createdAt y updatedAt automáticamente
+    // createdAt será usado por el controlador para la validación de 6 meses
 });
 
 const Antecedente = mongoose.model('Antecedente', antecedenteSchema);
