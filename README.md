@@ -1,3 +1,5 @@
+Markdown
+
 # 🚀 SIS-FP-Project: Sistema de Gestión Portuaria y Seguridad
 
 ¡Bienvenido al repositorio de SIS-FP-Project! Este sistema integral está diseñado para optimizar la gestión y el control de diversas operaciones en un entorno portuario, enfocándose en la seguridad y el registro eficiente de datos.
@@ -11,7 +13,8 @@
 * **Registro de Embarcaciones:** Seguimiento de embarcaciones que ingresan y zarpan.
 * **Eventos de Protestas:** Documentación detallada de protestas y bloqueos.
 * **Apoyo de Fuerza Pública:** Registro de la presencia y acciones de las fuerzas de seguridad.
-* **Gestión de Antecedentes:** Verificación y registro de antecedentes de personal.
+* **Gestión de Antecedentes:** Verificación y registro de antecedentes de personal, incluyendo validación de renovación.
+* **Registro de Accesos Centralizado:** Interfaz unificada para registrar entradas y salidas de personas, vehículos y embarcaciones.
 * **Dashboard Interactivo:** Reportes y visualizaciones de datos en tiempo real.
 * **Exportación a Excel:** Funcionalidad para exportar registros a hojas de cálculo.
 * **Autenticación Segura:** Acceso protegido mediante tokens JWT.
@@ -21,7 +24,7 @@
 
 ## 🏗️ Arquitectura y Funcionamiento
 
-El proyecto SIS-FP sigue una arquitectura **MERN Stack**, lo que significa que utiliza **M**ongoDB, **E**xpress.js, **R**eact (aunque el frontend es HTML/JS puro, sigue la filosofía de componentes y API REST), y **N**ode.js.
+El proyecto SIS-FP sigue una arquitectura **cliente-servidor (Frontend y Backend)**, con una base de datos NoSQL para el almacenamiento de datos.
 
 ### 🌐 Frontend
 
@@ -36,7 +39,8 @@ El frontend es una aplicación web construida con **HTML, CSS (Tailwind CSS y es
     * `protestas.html`: Gestión de registros de protestas.
     * `fuerza_publica.html`: Gestión de registros de apoyo de la fuerza pública.
     * `antecedentes.html`: Gestión de registros de antecedentes.
-    * `dashboard.html` (o `reporte_general.html`): Visualización de reportes y estadísticas.
+    * `registro_acceso.html`: Registro y control de accesos.
+    * `reporte_general.html`: Visualización de reportes y estadísticas.
 * **Funcionamiento:**
     * Cada sección del frontend interactúa con el backend a través de **peticiones HTTP (GET, POST, PUT, DELETE)** a las API RESTful.
     * Utiliza JavaScript para manejar la lógica de la interfaz de usuario, la validación de formularios, la paginación de tablas, la búsqueda y la exportación de datos.
@@ -47,7 +51,7 @@ El frontend es una aplicación web construida con **HTML, CSS (Tailwind CSS y es
 El backend está construido con **Node.js y el framework Express.js**, proporcionando una API RESTful para la gestión de datos.
 
 * **Estructura:**
-    * `models/`: Define los esquemas de datos con Mongoose para MongoDB (ej., `User`, `Empresa`, `Vehiculo`, `Embarcacion`, `Protesta`, `FuerzaPublica`, `Antecedente`).
+    * `models/`: Define los esquemas de datos con Mongoose para MongoDB (ej., `User`, `Empresa`, `Vehiculo`, `Embarcacion`, `Protesta`, `FuerzaPublica`, `Antecedente`, `RegistroAcceso`).
     * `controllers/`: Contiene la lógica de negocio para cada ruta, interactuando con los modelos y manejando las peticiones y respuestas HTTP.
     * `routes/`: Define las rutas de la API y las asocia con las funciones de los controladores.
     * `middleware/`: Incluye el middleware de autenticación (`authMiddleware.js`) para proteger las rutas.
@@ -94,27 +98,84 @@ El backend está construido con **Node.js y el framework Express.js**, proporcio
 
 ---
 
-## 📋 Requerimientos del Sistema
+## 🚀 Instalación y Ejecución Local (Guía de Inicio Rápido)
 
-Para ejecutar este proyecto localmente, necesitarás:
+Para poner en marcha el proyecto en tu máquina local, sigue estos pasos:
 
-* **Node.js:** Versión 14 o superior.
-* **npm:** Gestor de paquetes de Node.js (viene con Node.js).
-* **MongoDB:** Una instancia de MongoDB (local o en la nube, ej. MongoDB Atlas).
-* **Variables de Entorno:** Configurar un archivo `.env` con las variables necesarias (ej., `MONGO_URI`, `JWT_SECRET`).
+### 1. Requisitos Previos
 
----
+Asegúrate de tener instalados los siguientes componentes en tu sistema:
 
-## 🧪 Pruebas con Insomnia / Postman
+* **Node.js:** Versión 14.x o superior. Puedes descargarlo desde [nodejs.org](https://nodejs.org/).
+* **npm (Node Package Manager):** Se instala automáticamente con Node.js.
+* **MongoDB:** Una instancia de MongoDB debe estar corriendo localmente o ser accesible desde tu máquina. Puedes descargar MongoDB Community Server desde [mongodb.com/try/download/community](https://www.mongodb.com/try/download/community).
+    * **Opcional:** MongoDB Compass (herramienta gráfica para gestionar MongoDB) es útil para visualizar la base de datos.
 
-Las APIs del backend fueron probadas exhaustivamente utilizando herramientas como **Insomnia** o **Postman**. Se verificaron las operaciones CRUD (GET, POST, PUT, DELETE) para cada recurso (Empresas, Vehículos, Embarcaciones, Protestas, Fuerza Pública, Antecedentes), así como los flujos de autenticación (registro de usuario, inicio de sesión).
+### 2. Configuración del Proyecto
 
----
+#### 2.1. Clonar el Repositorio
 
-## 📊 Diagramas Conceptuales
+Abre tu terminal (Git Bash, CMD, PowerShell) y clona el repositorio del proyecto:
 
-### 🏛️ Diagrama de Clases (Conceptual)
+```bash
+git clone [https://github.com/JJMEJIAAVILA/SIS-FP-Project.git](https://github.com/JJMEJIAAVILA/SIS-FP-Project.git)
+Navega a la carpeta raíz del proyecto:
 
+Bash
+
+cd SIS-FP-Project
+2.2. Instalación de Dependencias del Backend
+El backend se encuentra en la subcarpeta backend. Navega a ella e instala las dependencias:
+
+Bash
+
+cd backend
+npm install
+2.3. Configuración de Variables de Entorno del Backend
+El backend requiere un archivo .env para almacenar variables de configuración sensibles (como la URI de la base de datos y la clave secreta de JWT).
+
+Crea un archivo llamado .env en la carpeta backend.
+
+Copia y pega el siguiente contenido en el archivo .env, reemplazando los valores entre corchetes [] con tus propios datos:
+
+MONGO_URI=[Tu_URI_de_MongoDB_local_o_remota]
+# Ejemplo para MongoDB local: MONGO_URI=mongodb://localhost:27017/sis_fp_db
+# Asegúrate de que 'sis_fp_db' sea el nombre de tu base de datos.
+
+JWT_SECRET=[Una_cadena_secreta_larga_y_aleatoria]
+# Ejemplo: JWT_SECRET=supersecretkeyparajwt
+# ¡Usa una cadena más segura en producción!
+
+PORT=3000
+Nota sobre MONGO_URI: Si tu MongoDB está corriendo localmente en el puerto por defecto, mongodb://localhost:27017/sis_fp_db es una URI común. El nombre de la base de datos (sis_fp_db) se creará automáticamente si no existe al primer uso.
+
+3. Ejecución de la Aplicación
+3.1. Iniciar el Backend
+Desde la carpeta backend, ejecuta el siguiente comando para iniciar el servidor:
+
+Bash
+
+npm start
+Verás mensajes en la consola indicando que el servidor se ha conectado a la base de datos y está escuchando en el puerto 3000.
+
+3.2. Acceder al Frontend
+El frontend es una aplicación web estática. No necesita un servidor Node.js separado para ejecutarse (aparte del backend API).
+
+Abre tu navegador web (Chrome, Firefox, Edge, etc.).
+
+Navega directamente al archivo login.html dentro de la carpeta SIS-FP de tu proyecto. La ruta en tu navegador se verá algo así:
+file:///C:/Users/TuUsuario/Documentos/SIS-FP-Project/SIS-FP/login.html
+(Ajusta la ruta según la ubicación de tu proyecto).
+
+3.3. Credenciales de Prueba
+Para iniciar sesión y probar el sistema, puedes usar las siguientes credenciales (si no las has modificado en tu base de datos):
+
+Usuario: admin
+
+Contraseña: password
+
+📊 Diagramas Conceptuales
+🏛️ Diagrama de Clases (Conceptual)
 Representa las entidades principales del sistema y sus atributos clave.
 
 +----------------+       +-----------------+       +-----------------+
@@ -166,9 +227,7 @@ V
 | - geoposicion: String       |
 | - observaciones: String     |
 +---------------------+
-
-### ↔️ Diagrama de Entidad-Relación (Conceptual)
-
+↔️ Diagrama de Entidad-Relación (Conceptual)
 Muestra las relaciones entre las colecciones de la base de datos.
 
 +-----------+       +-----------+       +-----------+
@@ -201,73 +260,70 @@ Muestra las relaciones entre las colecciones de la base de datos.
 | vias      |
 | ...       |
 +-----------+
-
----
-
-## 🗺️ Mapa de Navegación
-
+🗺️ Mapa de Navegación
 El sistema está diseñado para una navegación clara y estructurada:
 
-1.  **Página de Login (`login.html`)** 🔑
-    * Punto de entrada al sistema.
-    * Permite a los usuarios autenticarse.
-    * Redirige al `menu.html` tras un inicio de sesión exitoso.
+Página de Login (login.html) 🔑
 
-2.  **Menú Principal (`menu.html`)** 🏠
-    * Actúa como el dashboard central y punto de partida para todas las operaciones.
-    * **Desplegables y Secciones:**
-        * **Gestión de Entradas y Salidas** 🚪
-            * **Empresas:** Acceso a la gestión de registros de entrada y salida de personal de empresas.
-            * **Vehículos:** Acceso a la gestión de registros de entrada y salida de vehículos.
-            * **Embarcaciones:** Acceso a la gestión de registros de entrada y zarpe de embarcaciones.
-        * **Incidentes y Apoyos** 🚨
-            * **Protestas:** Acceso al registro y seguimiento de eventos de protestas y bloqueos.
-            * **Fuerza Pública:** Acceso al registro de apoyos y acciones de las fuerzas de seguridad.
-        * **Seguridad y Verificación** ✅
-            * **Antecedentes:** Acceso a la verificación y registro de antecedentes de personal.
-        * **Reportes y Estadísticas** 📈
-            * **Dashboard / Reporte General:** Acceso al panel de control con visualizaciones y filtros de datos consolidados.
+Punto de entrada al sistema.
 
-3.  **Páginas de Gestión (Ej. `empresas.html`, `vehiculos.html`, etc.)** 📝
-    * Cada sección (Empresas, Vehículos, Embarcaciones, Protestas, Fuerza Pública, Antecedentes) tiene su propia página dedicada.
-    * Contiene tablas para visualizar los registros.
-    * Botones para "Nuevo Registro", "Editar", "Eliminar" y "Exportar a Excel".
-    * Formularios para la creación y edición de registros.
-    * Funcionalidades específicas (ej. "Registrar Salida" para vehículos/embarcaciones, "Finalizar Protesta").
+Permite a los usuarios autenticarse.
 
-4.  **Dashboard / Reporte General (`dashboard.html` o `reporte_general.html`)** 📊
-    * Presenta un resumen visual de los datos del sistema.
-    * **KPIs:** Muestra contadores clave (ej. Total de Protestas, Vehículos Registrados).
-    * **Filtros de Datos:** Permite filtrar la información por rango de fechas y tipos específicos.
-    * **Gráficos:** Visualizaciones de datos (ej. Ingreso de Personal por Hora, Control Vehicular por Tipo, Protestas por Motivo).
+Redirige al menu.html tras un inicio de sesión exitoso.
 
----
+Menú Principal (menu.html) 🏠
 
-## 🛠️ Instalación y Ejecución Local
+Actúa como el dashboard central y punto de partida para todas las operaciones.
 
-Para poner en marcha el proyecto en tu máquina local:
+Desplegables y Secciones:
 
-1.  **Clona el repositorio:**
-    ```bash
-    git clone [https://github.com/JJMEJIAAVILA/SIS-FP-Project.git](https://github.com/JJMEJIAAVILA/SIS-FP-Project.git)
-    cd SIS-FP-Project
-    ```
-2.  **Configura el Backend:**
-    * Navega a la carpeta `backend`: `cd backend`
-    * Instala las dependencias: `npm install`
-    * Crea un archivo `.env` en la carpeta `backend` con tus variables de entorno. Ejemplo:
-        ```
-        MONGO_URI=mongodb://localhost:27017/sis_fp_db
-        JWT_SECRET=tu_secreto_jwt_muy_seguro
-        PORT=3000
-        ```
-    * Inicia el servidor backend: `npm start` (o `node server.js` si tu script de inicio es `server.js`)
-3.  **Configura el Frontend:**
-    * El frontend es estático (HTML, CSS, JS). Simplemente abre los archivos HTML en tu navegador.
-    * Asegúrate de que las rutas a los archivos CSS y JS en tu HTML sean correctas (ej. `assets/css/global.css`).
-    * Verifica que la URL de la API en los archivos JavaScript del frontend (`apiBaseUrl`) apunte a tu servidor backend (ej. `http://localhost:3000/api/empresas`).
+Gestión de Entradas y Salidas 🚪
 
+Registro de Accesos: Acceso al control unificado de entradas y salidas de personas, vehículos y embarcaciones.
 
----
+Empresas: Acceso a la gestión de registros de empresas.
 
-¡Gracias por explorar SIS-FP-Project! Si tienes alguna pregunta, no dudes en contactarme.
+Vehículos: Acceso a la gestión de registros de vehículos.
+
+Embarcaciones: Acceso a la gestión de registros de embarcaciones.
+
+Incidentes y Apoyos 🚨
+
+Protestas: Acceso al registro y seguimiento de eventos de protestas y bloqueos.
+
+Fuerza Pública: Acceso al registro de apoyos y acciones de las fuerzas de seguridad.
+
+Seguridad y Verificación ✅
+
+Antecedentes: Acceso a la verificación y registro de antecedentes de personal.
+
+Reportes y Estadísticas 📈
+
+Reporte General: Acceso al panel de control con visualizaciones y filtros de datos consolidados.
+
+Páginas de Gestión (Ej. empresas.html, vehiculos.html, etc.) 📝
+
+Cada sección (Empresas, Vehículos, Embarcaciones, Protestas, Fuerza Pública, Antecedentes, Registro de Accesos) tiene su propia página dedicada.
+
+Contiene tablas para visualizar los registros.
+
+Botones para "Nuevo Registro", "Editar", "Eliminar" y "Exportar a Excel".
+
+Formularios para la creación y edición de registros.
+
+Funcionalidades específicas (ej. "Registrar Salida" para accesos, "Finalizar Protesta", validación de 6 meses en Antecedentes).
+
+Reporte General (reporte_general.html) 📊
+
+Presenta un resumen visual de los datos del sistema.
+
+KPIs: Muestra contadores clave (ej. Total de Protestas, Vehículos Registrados).
+
+Filtros de Datos: Permite filtrar la información por rango de fechas y tipos específicos.
+
+Gráficos: Visualizaciones de datos (ej. Ingreso de Personal por Hora, Control Vehicular por Tipo, Protestas por Motivo).
+
+🧪 Pruebas con Insomnia / Postman
+Las APIs del backend fueron probadas exhaustivamente utilizando herramientas como Insomnia o Postman. Se verificaron las operaciones CRUD (GET, POST, PUT, DELETE) para cada recurso (Usuarios, Empresas, Vehículos, Embarcaciones, Protestas, Fuerza Pública, Antecedentes, Registros de Acceso), así como los flujos de autenticación (registro de usuario, inicio de sesión).
+
+¡Gracias por explorar SIS-FP-Project!
